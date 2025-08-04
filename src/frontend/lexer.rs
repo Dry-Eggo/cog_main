@@ -48,7 +48,7 @@ impl<'a> Lexer<'a> {
 	return None;
     }
     
-    pub fn parse_name(&mut self, tokens: &mut Vec<Spanned<Token>>) {
+    pub fn parse_name(&mut self, tokens: &mut Vec<Spanned<'a, Token>>) {
 	let mut buffer = String::new();
 	let sl = self.line;
 	let sc = self.line;
@@ -63,10 +63,10 @@ impl<'a> Lexer<'a> {
 	    _      => Token::Identifier(buffer)
 	};
 	
-	tokens.push(Spanned::span(token, Span::new("foo", sl, sc, self.column-1)));
+	tokens.push(Spanned::span(token, Span::new(self.filename, sl, sc, self.column-1)));
     }
 
-    pub fn parse_digit(&mut self, tokens: &mut Vec<Spanned<Token>>) {
+    pub fn parse_digit(&mut self, tokens: &mut Vec<Spanned<'a, Token>>) {
 	let mut buffer = String::new();
 	let sl = self.line;
 	let sc = self.line;	
@@ -76,7 +76,7 @@ impl<'a> Lexer<'a> {
 	}
 	
 	let token = Token::Integer(buffer);
-	tokens.push(Spanned::span(token, Span::new("foo", sl, sc, self.column-1)));	
+	tokens.push(Spanned::span(token, Span::new(self.filename, sl, sc, self.column-1)));	
     }
     
     pub fn lex(&mut self) -> Vec<Spanned<Token>> {
@@ -104,37 +104,38 @@ impl<'a> Lexer<'a> {
 	    match self.now().unwrap() {
 		'=' => {
 		    self.advance();
-		    tokens.push(Spanned::span(Token::Eq, Span::new(self.filename, sl, sc, self.column-1)));;
+		    tokens.push(Spanned::span(Token::Eq, Span::new(self.filename, sl, sc, self.column-1)));
 		}
 		';' => {
 		    self.advance();
-		    tokens.push(Spanned::span(Token::SemiColon, Span::new(self.filename, sl, sc, self.column-1)));;
+		    tokens.push(Spanned::span(Token::SemiColon, Span::new(self.filename, sl, sc, self.column-1)));
 		}
 		'{' => {
 		    self.advance();
-		    tokens.push(Spanned::span(Token::OBrace, Span::new(self.filename, sl, sc, self.column-1)));;
+		    tokens.push(Spanned::span(Token::OBrace, Span::new(self.filename, sl, sc, self.column-1)));
 		}
 		'}' => {
 		    self.advance();
-		    tokens.push(Spanned::span(Token::CBrace, Span::new(self.filename, sl, sc, self.column-1)));;
+		    tokens.push(Spanned::span(Token::CBrace, Span::new(self.filename, sl, sc, self.column-1)));
 		}
 		'(' => {
 		    self.advance();
-		    tokens.push(Spanned::span(Token::OParen, Span::new(self.filename, sl, sc, self.column-1)));;
+		    tokens.push(Spanned::span(Token::OParen, Span::new(self.filename, sl, sc, self.column-1)));
 		}
 		')' => {
 		    self.advance();
-		    tokens.push(Spanned::span(Token::CParen, Span::new(self.filename, sl, sc, self.column-1)));;
+		    tokens.push(Spanned::span(Token::CParen, Span::new(self.filename, sl, sc, self.column-1)));
 		}
 		':' => {
 		    self.advance();
 
 		    if let Some('=') = self.now() {
 			self.advance();
-			tokens.push(Spanned::span(Token::Coleq, Span::new(self.filename, sl, sc, self.column-1)));;			
+			tokens.push(Spanned::span(Token::Coleq, Span::new(self.filename, sl, sc, self.column-1)));
+			continue;
 		    }
 		    
-		    tokens.push(Spanned::span(Token::Colon, Span::new(self.filename, sl, sc, self.column-1)));;
+		    tokens.push(Spanned::span(Token::Colon, Span::new(self.filename, sl, sc, self.column-1)));
 		}
 		_ => {
 		    println!("Unknown character '{}'", self.now().unwrap());
