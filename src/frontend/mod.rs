@@ -1,6 +1,10 @@
 pub(crate) mod lexer;
 pub(crate) mod parser;
 pub(crate) mod node;
+pub(crate) mod semantics;
+pub(crate) mod symbols;
+pub(crate) mod context;
+pub(crate) mod diagnostic;
 pub(crate) mod token;
 pub(crate) mod driver;
 pub(crate) mod span;

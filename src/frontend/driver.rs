@@ -3,6 +3,7 @@
 use crate::{Args, CompileCommand, utils::utils};
 use crate::frontend::parser::Parser;
 use crate::frontend::lexer::Lexer;
+use crate::frontend::semantics::Semantics;
 
 pub struct Driver;
 
@@ -13,12 +14,12 @@ impl Driver {
 	    if let Some(path) = inpath {
 		let content = utils::open_file(path.to_string());
 		if let Some(source) = content {
-
-		    let mut lexer = Lexer::new(&source, &path);
-		    let tokens    = lexer.lex();
-
-		    let mut parser =  Parser::new(&source, &tokens);
-		    let root       =  parser.build_ast();
+		    let mut lexer  = Lexer::new(&source, &path);
+		    let tokens     = lexer.lex();
+		    let mut parser = Parser::new(&source, &tokens);
+		    let root       = parser.build_ast();
+		    let mut sema   = Semantics::new(&source, &root);
+		    sema.check();
 		} else {
 		    println!("Cog: unable to read file: '{path}'");
 		    return Err(1);

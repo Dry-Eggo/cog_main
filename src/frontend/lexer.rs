@@ -51,7 +51,7 @@ impl<'a> Lexer<'a> {
     pub fn parse_name(&mut self, tokens: &mut Vec<Spanned<'a, Token>>) {
 	let mut buffer = String::new();
 	let sl = self.line;
-	let sc = self.line;
+	let sc = self.column;
 	
 	while self.now().is_some() && (self.now().unwrap().is_alphanumeric() || self.now().unwrap() == '_') {
 	    buffer.push(self.advance().unwrap());
@@ -69,7 +69,7 @@ impl<'a> Lexer<'a> {
     pub fn parse_digit(&mut self, tokens: &mut Vec<Spanned<'a, Token>>) {
 	let mut buffer = String::new();
 	let sl = self.line;
-	let sc = self.line;	
+	let sc = self.column;	
 
 	while self.now().is_some() && self.now().unwrap().is_numeric() {
 	    buffer.push(self.advance().unwrap());
@@ -144,7 +144,7 @@ impl<'a> Lexer<'a> {
 	    }
 	}
 	
-	
+	tokens.push(Spanned::span(Token::EOF, Span::new(self.filename, self.line, self.column, self.column)));	
 	return tokens;
     }
 }

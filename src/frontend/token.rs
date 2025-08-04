@@ -1,5 +1,6 @@
 #![allow(unused)]
 
+#[derive(Debug, PartialEq)]
 pub enum Token {
     Func, Let,
     
@@ -10,4 +11,6 @@ pub enum Token {
 
     Colon, SemiColon, Comma, Coleq,
     OParen, CParen, OBrace, CBrace,
+
+    EOF,
 }
