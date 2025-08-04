@@ -9,7 +9,7 @@ pub struct FunctionInfo<'a> {
 }
 
 pub struct FunctionTable<'a> {
-    functions: HashMap<String, Box<FunctionInfo<'a>>>,    
+    functions: HashMap<String, FunctionInfo<'a>>, 
 }
 
 impl<'a> FunctionInfo<'a> {
@@ -30,5 +30,9 @@ impl<'a> FunctionTable<'a> {
 	Self {
 	    functions: HashMap::new(),
 	}
+    }
+
+    pub fn add(&mut self, name: String, info: FunctionInfo<'a>) {
+	self.functions.insert(name, info);
     }
 }
