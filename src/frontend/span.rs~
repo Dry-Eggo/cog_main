@@ -1,5 +1,0 @@
-#![allow(unused)]
-
-pub struct Span {
-    filename: String
-}
