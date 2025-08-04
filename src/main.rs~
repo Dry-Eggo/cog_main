@@ -1,9 +1,0 @@
-mod frontend;
-
-use frontend::lexer;
-
-fn main() {
-    let source = "let x := 60;";
-    let mut lexer = lexer::Lexer::new(source);
-    let tokens = lexer.lex();
-}
