@@ -23,13 +23,14 @@ pub unsafe fn new_syntax_error (span: Span, msg: &str, hint: Option<&str>, arena
     err
 }
 
-unsafe fn report_syntax_error (err: *mut SyntaxError) {
-    
+unsafe fn report_syntax_error (err: *mut SyntaxError, lines: *mut CogArray<CogString>) {
+    let line = *cog_arr_get(lines, 0);
+    println!("{}", cogstr_to_str(line));
 }
 
-pub unsafe fn report_syntax_errors (errors: *mut CogArray<*mut SyntaxError>, count: usize) {
+pub unsafe fn report_syntax_errors (errors: *mut CogArray<*mut SyntaxError>, count: usize, lines: *mut CogArray<CogString>) {
     for i in 0..count {
 	let err = cog_arr_get(errors, i);
-	report_syntax_error(*err)
+	report_syntax_error(*err, lines)
     }
 }

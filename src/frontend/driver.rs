@@ -45,7 +45,7 @@ pub fn driver_run (args: Args) {
 	if !parser_parse(dref!(driver).parser) {
 	    let errors = parser_get_errors(dref!(driver).parser);
 	    let count  = cog_arr_len(errors);
-	    report_syntax_errors(errors, count);
+	    report_syntax_errors(errors, count, dref!(driver).source_lines);
 	    eprintln!("Cog: {} parsing error[s] occurred", count);
 	}
 	
