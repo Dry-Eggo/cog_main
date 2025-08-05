@@ -1,21 +1,25 @@
 #![allow(unused)]
 
-use crate::frontend:: {span::Spanned};
+use crate::frontend:: {span::Spanned, span::Span};
+
+pub type SpannedExpr<'a> = Spanned<'a, Box<Expr<'a>>>;
+pub type SpannedStmt<'a> = Spanned<'a, Box<Stmt<'a>>>;
+pub type SpannedItem<'a> = Spanned<'a, Box<Item<'a>>>;
 
 #[derive(Debug, Clone)]
 pub enum Node<'a> {
     NoOp,
-    Expr (Spanned<'a, Box<Expr<'a>>>),
-    Stmt (Spanned<'a, Box<Stmt<'a>>>),
-    Item (Spanned<'a, Box<Item<'a>>>),
+    Expr (SpannedExpr<'a>),
+    Stmt (SpannedStmt<'a>),
+    Item (SpannedItem<'a>),
     
     Program (Vec<Spanned<'a, Box<Item<'a>>>>)
 }
 #[derive(Debug, Clone)]
 pub struct Function<'a> {
-    pub name:    String,
-    params:  Option<Vec<String>>, // TODO
-    body:    Option<Spanned<'a, Box<Stmt<'a>>>>
+    pub name:  &'a str,
+    params:    Option<Vec<String>>, // TODO
+    body:      Option<SpannedStmt<'a>>
 }
 
 #[derive(Debug, Clone)]
@@ -25,7 +29,7 @@ pub enum Item<'a> {
 }
 
 impl<'a> Item<'a> {
-    pub fn make_function(name: String, params: Option<Vec<String>>, body: Option<Spanned<'a, Box<Stmt<'a>>>>) -> Self {
+    pub fn make_function(name: &'a str, params: Option<Vec<String>>, body: Option<SpannedStmt<'a>>) -> Self {
 	Item::Function ( Function {
 	    name,
 	    params,
@@ -33,17 +37,33 @@ impl<'a> Item<'a> {
 	})
     }
 }
+#[derive(Debug, Clone)]
+pub struct LetBinding<'a> {
+    name:    Spanned<'a, &'a str>,
+    rhs:     SpannedExpr<'a>,
+    modifier: BindingModifier
+}
 
 #[derive(Debug, Clone)]
 pub enum Stmt<'a> {
     NoOp,
-    Expr (Spanned<'a, Box<Expr<'a>>>),
-    LetBinding {
-	name:    Spanned<'a, String>,
-	rhs:     Spanned<'a, Box<Expr<'a>>>,
-	modfier: Spanned<'a, BindingModifier>
-    },
-    CompoundStmt (Vec<Spanned<'a, Box<Stmt<'a>>>>)
+    Expr (SpannedExpr<'a>),
+    LetBinding (LetBinding<'a>),
+    CompoundStmt (Vec<SpannedStmt<'a>>)
+}
+
+impl<'a> Stmt<'a> {
+    pub fn make_binding(name: Spanned<'a, &'a str>, bmod: BindingModifier, rhs: SpannedExpr<'a>, span: Span<'a>) -> SpannedStmt<'a> {
+	return Spanned::span(Box::new(Stmt::LetBinding (LetBinding {
+		name,
+		modifier: bmod,
+		rhs,
+	})), span);
+    }
+
+    pub fn make_no_op(span: Span<'a>) -> SpannedStmt<'a> {
+	return Spanned::span(Box::new(Stmt::NoOp), span);
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -61,8 +81,8 @@ pub enum Expr<'a> {
 
     BinaryExpr {
 	op:   BinaryOp,
-	lhs:  Spanned<'a, Box<Expr<'a>>>,
-	rhs:  Spanned<'a, Box<Expr<'a>>>,
+	lhs:  SpannedExpr<'a>,
+	rhs:  SpannedExpr<'a>,
     }
 }
 

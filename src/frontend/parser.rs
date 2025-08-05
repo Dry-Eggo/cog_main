@@ -2,7 +2,8 @@
 
 use crate::frontend:: {token::Token, span:: {Spanned, Span}};
 use crate::frontend::diagnostic:: {SyntaxError, DiagnosticEngine};
-use crate::frontend::node:: {Node, Stmt, Expr, Item};
+use crate::frontend::node:: {Node, Stmt, Expr, Item, self};
+use crate::frontend::node:: {SpannedStmt, SpannedExpr, SpannedItem};
 
 pub struct Parser<'a> {
     source:      &'a str,
@@ -58,12 +59,11 @@ impl<'a> Parser<'a> {
 	}
     }
 
-    fn expect_ident(&mut self) -> Option<String> {
-	let tok = &self.next_token().item;
-	if let Token::Identifier(ident) = tok {
+    fn expect_ident(&mut self) -> Option<&'a str> {
+	if let Token::Identifier(ref ident) = self.next_token().item {
 	    // not allowed by rust
 	    /* self.advance(); */
-	    return Some(ident.to_string());
+	    return Some(ident.as_str());
 	}
 	None
     }
@@ -115,7 +115,7 @@ impl<'a> Parser<'a> {
 		
 		self.recover(&Token::OBrace);
 		
-		"error".to_string()
+		"error"
 	    }
 	};
 	
@@ -150,15 +150,42 @@ impl<'a> Parser<'a> {
 	let start = self.get_span();
 
 	if self.matches(&Token::Let) {
-	    todo!();
+	    let let_stmt = self.parse_binding();
+	    return let_stmt;
 	} else {
-	    let end = self.get_span();	    
 	    let expr = self.parse_expr();
+	    let end = self.get_span();	    
 
 	    return Spanned::span(Box::new(Stmt::Expr(expr)), Span::merge(start, end));
 	}	
     }
 
+    fn parse_binding(&mut self) -> SpannedStmt<'a> {
+	let start = self.get_span();
+	self.advance();	
+	let mut bmod = node::BindingModifier::Constant;
+
+	let var_name = {
+	    let span = self.get_span();
+	    if let Some(name) = self.expect_ident() {
+		self.advance();
+		Spanned::span(name, span)
+	    } else {	    
+		self.add_error("Expected a variable name".to_string(), self.get_span());	    
+		self.recover(&Token::SemiColon);	    
+		return Stmt::make_no_op(self.get_span());
+	    }
+	    
+	};
+
+	self.expect_err(&Token::Eq);
+
+	let rhs = self.parse_expr();
+	
+	let end = self.get_span();
+	return Stmt::make_binding(var_name, bmod, rhs, Span::merge(start, end));
+    }
+    
     fn parse_expr(&mut self) -> Spanned<'a, Box<Expr<'a>>> {
 	println!("{:?}", self.next_token());
 	todo!("parse_expr");

@@ -3,7 +3,7 @@
 use crate::frontend::node:: {Node, Stmt, Expr, Item, self};
 use crate::frontend::span:: {Spanned, Span};
 use crate::frontend::symbols:: {FunctionInfo, FunctionTable};
-use crate::frontend::context:: {Context};
+use crate::frontend::context:: {Context, SharedContext};
 
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -12,8 +12,8 @@ pub struct Semantics<'a> {
     root:    &'a Node<'a>,
     source:  &'a str,
 
-    root_context:    Rc<RefCell<Context<'a>>>,
-    current_context: Rc<RefCell<Context<'a>>>,
+    root_context:    SharedContext<'a>,
+    current_context: SharedContext<'a>,
 }
 
 impl<'a> Semantics<'a> {
@@ -46,8 +46,8 @@ impl<'a> Semantics<'a> {
     }
 
     fn register_function(&mut self, func: &'a node::Function<'a>, span: &'a Span<'a>) {
-	let finfo = FunctionInfo::new(func.name.clone(), span.clone());
-	self.current_context.borrow_mut().add_function(func.name, finfo);
+	let finfo = FunctionInfo::new(&func.name, span.clone());
+	self.current_context.borrow_mut().add_function(&func.name, finfo);
     }
     
     fn register_item(&mut self, item: &'a Spanned<'a, Box<Item<'a>>>) {
@@ -66,7 +66,6 @@ impl<'a> Semantics<'a> {
     
     pub fn check (&mut self) -> bool {
 	self.register_all_items();
-	
 	if let Node::Program (items) = self.root {
 	    for item in items {
 		self.check_item(item);
