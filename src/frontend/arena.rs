@@ -1,102 +1,88 @@
 #![allow(unused)]
+#![allow(unsafe_op_in_unsafe_fn)]
 
-use std::alloc:: { alloc, Layout };
-use std::ptr::   { self,  null_mut };
+use std::alloc:: { alloc, realloc, dealloc, Layout };
+use std::ptr::   { self,  NonNull };
+use std::mem;
 
-const DEFAULT_BLOCK_SIZE: usize = 1024*8;
+use crate::utils::string;
 
-pub struct Block {
-    start:   *mut u8,
-    current: *mut u8,
-    end:     *mut u8,
+pub struct Arena {
+    ptr:     *mut u8,
+    capacity: usize,
+    offset:   usize,
 }
 
+const DEFAULT_CAPACITY: usize = 1024;
 
-impl Block {
-    pub fn new(size: usize) -> Self {
-	unsafe {
-	    let layout = Layout::from_size_align(size, std::mem::align_of::<usize>()).unwrap();
-	    let start  = alloc(layout);
-	    if start.is_null() {
-		panic!("Failed to allocate arena");
-	    }
+pub unsafe fn arena_new (capacity: usize) -> Arena {
+    let cap = if capacity == 0 { DEFAULT_CAPACITY } else { capacity };
+    let layout = Layout::from_size_align(cap, mem::align_of::<usize>()).unwrap();
+    unsafe {
+	let ptr    = alloc(layout);
 
-	    Self {
-		start,
-		current: start,
-		end: start.add(size),
-	    }
-	}
-    }
-
-    pub fn alloc(&mut self, size: usize, align: usize) -> Option<*mut u8> {
-	unsafe {
-	    let aligned  = self.current.add(self.current.align_offset(align));
-	    let new_curr = aligned.add(size);
-	    if new_curr > self.end {
-		return None;
-	    }
-	    self.current  = new_curr;
-	    Some(aligned)
+	Arena {
+	    ptr,
+	capacity: cap,
+	    offset: 0
 	}
     }
 }
 
-impl Drop for Block {
-    fn drop(&mut self) {
-	unsafe {
-	    let size = self.end.offset_from(self.start) as usize;
-	    let layout = Layout::from_size_align_unchecked(size, std::mem::align_of::<usize>());
-	    std::alloc::dealloc(self.start, layout);
-	}
-    }
+pub unsafe fn arena_alloc(arena: *mut Arena, size: usize) -> *mut u8 {
+    arena_alloc_align(arena, size, mem::align_of::<u8>())
 }
 
-pub struct Allocator {
-    blocks: Vec<Block>,
-    block_size: usize,
+pub unsafe fn arena_alloc_ty<T>(arena: *mut Arena) -> *mut T {
+    arena_alloc_align(arena, mem::size_of::<T>(), mem::align_of::<T>()) as *mut T
 }
 
-impl Allocator {
-    pub fn new(init_block_size: usize) -> Self {
-	let mut arena = Self  {
-	    blocks: vec![],
-	    block_size: init_block_size,
-	};
-	arena.add_block();
-	arena
+pub unsafe fn arena_alloc_align (allocator: *mut Arena, size: usize, align: usize) -> *mut u8 {
+    let arena = &mut *allocator;
+
+    let aligned_offset = (arena.offset + align - 1) & !(align - 1);
+    let end            = aligned_offset + size;
+
+    if end > arena.capacity {
+	arena_grow(allocator, arena.capacity*2);
+	return arena_alloc_align (allocator, size, align);
     }
 
-    pub fn add_block(&mut self) {
-	self.blocks.push(Block::new(self.block_size));
-    }
+    let result = arena.ptr.add(aligned_offset);
+    arena.offset = end;
+    result
+}
 
-    pub fn alloc_align(&mut self, size: usize, align: usize) -> *mut u8 {
-	if let Some(ptr) = self.blocks.last_mut().unwrap().alloc(size, align) {
-	    return ptr;
-	}
+pub unsafe fn arena_grow(allocator: *mut Arena, new_cap: usize) {
+    let arena = &mut *allocator;
+    let layout = Layout::from_size_align(arena.capacity, mem::align_of::<usize>()).unwrap();
+    let new_ptr = realloc(arena.ptr, layout, new_cap);
 
-	let new_block_size = self.block_size.max(size.next_power_of_two());
-	self.blocks.push(Block::new(new_block_size));
-	self.blocks.last_mut().unwrap().alloc(size, align).unwrap()
-    }
+    arena.ptr = new_ptr;
+    arena.capacity = new_cap;
+}
 
-    pub fn alloc(&mut self, size: usize) -> *mut u8 {
-	self.alloc_align(size, 8)
-    }
+pub unsafe fn arena_reset(allocator: *mut Arena) {
+    (*allocator).offset = 0;
+}
 
-    pub fn alloc_ty<T>(&mut self) -> *mut T {
-	self.alloc_align(std::mem::size_of::<T>(), std::mem::align_of::<T>()) as *mut T
-    }
+pub unsafe fn arena_free(allocator: *mut Arena) {
+    let layout = Layout::from_size_align((*allocator).capacity, mem::align_of::<usize>()).unwrap();
+    dealloc((*allocator).ptr, layout);
+    (*allocator).ptr = ptr::null_mut();
+    (*allocator).capacity = 0;
+    (*allocator).offset   = 0;
+}
 
-    pub fn alloc_str(&mut self, s: &str) -> &str {
-	let len = s.len();
-	let ptr = self.alloc_align(len, std::mem::align_of::<u8>());
+pub unsafe fn arena_alloc_str(allocator: *mut Arena, s: &str) -> string::CogString {
+    let bytes = s.as_bytes();
+    let len   = bytes.len();
 
-	unsafe {
-	    std::ptr::copy_nonoverlapping(s.as_ptr(), ptr, len);
-	    let slice = std::slice::from_raw_parts(ptr, len);
-	    std::str::from_utf8_unchecked(slice)
-	}
+    let dest = arena_alloc_align(allocator, len, std::mem::align_of::<u8>());
+    ptr::copy_nonoverlapping(bytes.as_ptr(), dest, len);
+
+    string::CogString {
+	data: dest,
+	len,
     }
 }

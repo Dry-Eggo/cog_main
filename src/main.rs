@@ -2,7 +2,7 @@
 mod frontend;
 mod utils;
 
-use frontend::{lexer, driver::Driver};
+use frontend::{driver::*};
 use clap::{Parser, Subcommand};
 
 #[derive(Parser, Debug)]
@@ -32,7 +32,7 @@ fn main() {
     
     let mut compiler_options = Args::parse();
 
-    Driver::run(compiler_options);
+    unsafe { driver_run(compiler_options); }
     
     // let mut lexer = lexer::Lexer::new(source, "foo");
     // let tokens = lexer.lex();
