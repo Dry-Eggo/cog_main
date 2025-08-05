@@ -1,7 +1,13 @@
 #![allow(unused)]
 use std::io::Read;
 
-pub fn open_file(path: String) -> Option<String> {
+#[macro_export] macro_rules! dref {
+    ($ptr: expr) => {
+	(*$ptr)
+    }
+}
+
+pub fn open_file(path: &String) -> Option<String> {
     let mut file = std::fs::File::open(path);
     match file {
 	Ok(mut file) => {

@@ -37,6 +37,10 @@ pub unsafe fn arena_alloc_ty<T>(arena: *mut Arena) -> *mut T {
     arena_alloc_align(arena, mem::size_of::<T>(), mem::align_of::<T>()) as *mut T
 }
 
+pub unsafe fn arena_alloc_array<T>(arena: *mut Arena, count: usize) -> *mut T {
+    arena_alloc_align(arena, mem::size_of::<T>() * count, mem::align_of::<T>()) as *mut T
+}
+
 pub unsafe fn arena_alloc_align (allocator: *mut Arena, size: usize, align: usize) -> *mut u8 {
     let arena = &mut *allocator;
 

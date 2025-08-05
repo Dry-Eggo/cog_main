@@ -1,4 +1,3 @@
+fn () {
 
-func main() {
-     let age = 30
 }

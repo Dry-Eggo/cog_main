@@ -4,7 +4,7 @@
 use crate::frontend::arena::*;
 use std::ptr;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct CogString {
     pub data: *mut u8,
     pub len:  usize
@@ -12,6 +12,16 @@ pub struct CogString {
 
 pub unsafe fn cogstr_new (s: &str, arena: *mut Arena) -> CogString {
     return arena_alloc_str(arena, s);
+}
+
+#[macro_export] macro_rules! cogstr {
+    ($str: literal, $arena: expr) => {
+	(cogstr_new($str, $arena))
+    };
+
+    ($str: ident, $arena: expr) => {
+	(cogstr_from_string($str, $arena))
+    }
 }
 
 pub unsafe fn cogstr_from_string (input: String, arena: *mut Arena) -> CogString {
