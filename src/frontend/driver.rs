@@ -40,11 +40,11 @@ pub fn driver_run (args: Args) {
 	lexer_lex(dref!(driver).lexer);
 	let tokens = dref!(dref!(driver).lexer).tokens;	
 
-	dref!(driver).parser = parser_new(dref!(driver).arena, tokens);
-	if let Some(count) = parser_parse(dref!(driver).parser) {
-	    println!("Cog: {count} parsing error[s] occurred");
-	    report_syntax_errors(parser_get_errors(dref!(driver).parser), count);
-	}
+	//dref!(driver).parser = parser_new(dref!(driver).arena, tokens);
+	//if let Some(count) = parser_parse(dref!(driver).parser) {
+	//    println!("Cog: {count} parsing error[s] occurred");
+	//    report_syntax_errors(parser_get_errors(dref!(driver).parser), count);
+	//}
 	
 	driver_free(driver);
     }
