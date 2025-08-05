@@ -1,12 +1,11 @@
 #![allow(unused)]
-
+use crate::frontend::arena::Allocator;
 use crate::frontend:: {token::Token, span:: {Spanned, Span}};
 use crate::frontend::diagnostic:: {SyntaxError, DiagnosticEngine};
 use crate::frontend::node:: {Node, Stmt, Expr, Item, self};
 use crate::frontend::node:: {SpannedStmt, SpannedExpr, SpannedItem};
 
 pub struct Parser<'a> {
-    source:      &'a str,
     tokens:      &'a [Spanned<'a, Token>],
     program:     Vec<Spanned<'a, Box<Item<'a>>>>,
     cursor:      usize,
@@ -15,14 +14,14 @@ pub struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    pub fn new (source: &'a str, tokens: &'a [Spanned<'a, Token>]) -> Self {	
-	Self {
-	    source,
-	    tokens,
-	    program: vec![],
-	    cursor: 0,
-
-	    diagnostics: DiagnosticEngine::new()
+    pub fn new (tokens: &'a [Spanned<'a, Token>], arena: *mut Allocator) -> *mut Self {
+	unsafe {
+	    let parser = (*arena).alloc_ty::<Parser>();
+	    (*parser).tokens      = tokens;
+	    (*parser).program     = vec![];
+	    (*parser).cursor      = 0;
+	    (*parser).diagnostics = DiagnosticEngine::new();
+	    parser
 	}
     }
 

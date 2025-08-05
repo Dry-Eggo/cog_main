@@ -1,5 +1,6 @@
 #![allow(unused)]
 use crate::frontend::{token::Token, span::{Span, Spanned}};
+use crate::frontend::arena::Allocator;
 
 pub struct Lexer<'a>  {
     source: &'a str,
@@ -10,13 +11,15 @@ pub struct Lexer<'a>  {
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new(source: &'a str, filename: &'a str) -> Self {
-	Self {
-	    source,
-	    filename,
-	    cursor: 0,
-	    line: 1,
-	    column: 1,
+    pub fn new(arena: *mut Allocator, source: &'a str, filename: &'a str) -> *mut Self {
+	unsafe {
+	    let lexer = (*arena).alloc_ty::<Self>();
+	    (*lexer).source   = source;
+	    (*lexer).filename = filename;
+	    (*lexer).cursor   = 0;
+	    (*lexer).line     = 1;
+	    (*lexer).column   = 1;
+	    lexer
 	}
     }
 

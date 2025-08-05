@@ -39,6 +39,7 @@ impl<'a> FunctionTable<'a> {
     }
 
     pub fn get_mut(&mut self, query: &str) -> Option<&mut FunctionInfo> {
-	self.functions.get_mut(query)
+	// self.functions.get_mut(query)
+	None
     }
 }

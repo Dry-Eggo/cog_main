@@ -1,4 +1,5 @@
 pub(crate) mod lexer;
+pub(crate) mod arena;
 pub(crate) mod parser;
 pub(crate) mod node;
 pub(crate) mod semantics;

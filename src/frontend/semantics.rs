@@ -86,6 +86,7 @@ impl<'a> Semantics<'a> {
     }
 
     fn get_function_info(&mut self, query: &String) -> Option<&mut FunctionInfo> {
-	self.current_context.borrow_mut().get_function(query)
+	// self.current_context.borrow_mut().get_function(query)
+	None
     }
 }
