@@ -59,11 +59,13 @@ impl<'a> Parser<'a> {
 	}
     }
 
-    fn expect_ident(&mut self) -> Option<&'a str> {
-	if let Token::Identifier(ref ident) = self.next_token().item {
-	    // not allowed by rust
-	    /* self.advance(); */
-	    return Some(ident.as_str());
+    fn expect_ident(&mut self) -> Option<String> {
+	let is_ident = matches!(self.next_token().item, Token::Identifier(_));
+
+	if is_ident {
+	    if let Token::Identifier(ref ident) = self.next_token().item {
+		return Some(ident.to_string());
+	    }
 	}
 	None
     }
@@ -115,7 +117,7 @@ impl<'a> Parser<'a> {
 		
 		self.recover(&Token::OBrace);
 		
-		"error"
+		"error".to_string()
 	    }
 	};
 	
@@ -135,11 +137,17 @@ impl<'a> Parser<'a> {
 
     fn parse_body(&mut self) -> Spanned<'a, Box<Stmt<'a>>> {
 	let start = self.get_span();
-	let statements = vec![];
+	let mut statements = vec![];
 	self.advance(); // skip '{'
 	
 	while !self.matches(&Token::EOF) && !self.matches(&Token::CBrace) {
 	    let statement = self.parse_statement();
+
+	    if self.matches(&Token::SemiColon) {
+		self.advance();
+	    }
+	    
+	    statements.push(statement);
 	}
 	
 	let end = self.get_span();
@@ -179,15 +187,53 @@ impl<'a> Parser<'a> {
 	};
 
 	self.expect_err(&Token::Eq);
-
 	let rhs = self.parse_expr();
 	
 	let end = self.get_span();
 	return Stmt::make_binding(var_name, bmod, rhs, Span::merge(start, end));
     }
     
-    fn parse_expr(&mut self) -> Spanned<'a, Box<Expr<'a>>> {
-	println!("{:?}", self.next_token());
-	todo!("parse_expr");
+    fn parse_expr(&mut self) -> SpannedExpr<'a> {
+	return self.parse_logical_or();
     }
+
+    fn parse_logical_or(&mut self) -> SpannedExpr<'a> {
+	return self.parse_logical_and();
+    }
+
+    fn parse_logical_and(&mut self) -> SpannedExpr<'a> {
+	return self.parse_equality();
+    }
+
+    fn parse_equality(&mut self) -> SpannedExpr<'a> {
+	return self.parse_additive();
+    }
+
+    fn parse_additive(&mut self) -> SpannedExpr<'a> {
+	return self.parse_term();
+    }
+    
+    fn parse_term(&mut self) -> SpannedExpr<'a> {
+	return self.parse_postfix();
+    }
+
+    fn parse_postfix(&mut self) -> SpannedExpr<'a> {
+	return self.parse_atom();
+    }
+    
+    fn parse_atom(&mut self) -> SpannedExpr<'a> {	
+	let span = self.get_span();
+	match self.next_token().item {
+	    Token::Integer(ref num) => {
+		let value = num.parse::<i64>().unwrap();
+		self.advance();
+		return Expr::make_integer(value, span.clone());
+	    }
+	    _ => {
+		self.add_error("Not a valid expression".to_string(), span.clone());
+		self.recover(&Token::SemiColon);
+		return Expr::make_no_op(span.clone());
+	    }
+	}
+    }    
 }

@@ -35,7 +35,11 @@ impl<'a> Context<'a> {
 	return self.parent.is_some();
     }
     
-    pub fn add_function(&mut self, name: &'a str, info: FunctionInfo<'a>) {
+    pub fn add_function(&mut self, name: String, info: FunctionInfo<'a>) {
 	self.functions.add(name, info);
+    }
+
+    pub fn get_function(&mut self, query: &String) -> Option<&mut FunctionInfo> {
+	self.functions.get(query)
     }
 }

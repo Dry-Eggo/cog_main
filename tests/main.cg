@@ -1,4 +1,4 @@
 
 func main() {
-     let age = 30;
+     let age = 30
 }

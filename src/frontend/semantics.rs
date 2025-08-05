@@ -46,8 +46,8 @@ impl<'a> Semantics<'a> {
     }
 
     fn register_function(&mut self, func: &'a node::Function<'a>, span: &'a Span<'a>) {
-	let finfo = FunctionInfo::new(&func.name, span.clone());
-	self.current_context.borrow_mut().add_function(&func.name, finfo);
+	let finfo = FunctionInfo::new(func.name, span.clone());
+	self.current_context.borrow_mut().add_function(func.name, finfo);
     }
     
     fn register_item(&mut self, item: &'a Spanned<'a, Box<Item<'a>>>) {
@@ -75,9 +75,17 @@ impl<'a> Semantics<'a> {
 	return true;
     }
     
-    pub fn check_item (&mut self, item: &'a Spanned<'a, Box<Item<'a>>>) {
+    fn check_item (&mut self, item: &'a Spanned<'a, Box<Item<'a>>>) {
 	if let Item::Function (ref func) = *item.item {
-	    println!("Function: {name}", name = func.name);
+	    self.check_function(func, &item.span);
 	}
+    }
+
+    fn check_function(&mut self, func: &node::Function<'a>, span: &Span<'a>) {
+	let finfo = self.get_function_info(&func.name);
+    }
+
+    fn get_function_info(&mut self, query: &String) -> Option<&mut FunctionInfo> {
+	self.current_context.borrow_mut().get_function(query)
     }
 }

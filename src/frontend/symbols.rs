@@ -5,24 +5,24 @@ use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct FunctionInfo<'a> {
-    name:        &'a str,
+    pub name:        String,
     declaration: Span<'a>,
 }
 
 #[derive(Debug)]
 pub struct FunctionTable<'a> {
-    functions: HashMap<&'a str, FunctionInfo<'a>>, 
+    functions: HashMap<String, FunctionInfo<'a>>, 
 }
 
 impl<'a> FunctionInfo<'a> {
-    pub fn new(name: &'a str, span: Span<'a>) -> Self {
+    pub fn new(name: String, span: Span<'a>) -> Self {
 	Self {
 	    name,
 	    declaration: span
 	}
     }
 
-    pub fn get_name(&self) -> &'a str {
+    pub fn get_name(&self) -> String {
 	return self.name;
     }
 }
@@ -34,7 +34,11 @@ impl<'a> FunctionTable<'a> {
 	}
     }
 
-    pub fn add(&mut self, name: &'a str, info: FunctionInfo<'a>) {
+    pub fn add(&mut self, name: String, info: FunctionInfo<'a>) {
 	self.functions.insert(name, info);
+    }
+
+    pub fn get(&mut self, query: &String) -> Option<&mut FunctionInfo> {
+	self.functions.get_mut(query.as_str())
     }
 }
