@@ -17,6 +17,7 @@ pub struct Driver {
     lexer:  *mut Lexer,
     parser: *mut Parser, 
     arena:  *mut Arena,
+    source_lines: *mut CogArray<CogString>
 }
 
 pub fn driver_run (args: Args) {
@@ -35,16 +36,18 @@ pub fn driver_run (args: Args) {
 		std::process::exit(1);
 	    }
 	};
-	
+	dref!(driver).source_lines = string_to_lines(source, dref!(driver).arena);
 	dref!(driver).lexer = lexer_new(dref!(driver).arena, source);
 	lexer_lex(dref!(driver).lexer);
 	let tokens = dref!(dref!(driver).lexer).tokens;	
 
-	//dref!(driver).parser = parser_new(dref!(driver).arena, tokens);
-	//if let Some(count) = parser_parse(dref!(driver).parser) {
-	//    println!("Cog: {count} parsing error[s] occurred");
-	//    report_syntax_errors(parser_get_errors(dref!(driver).parser), count);
-	//}
+	dref!(driver).parser = parser_new(dref!(driver).arena, tokens);
+	if !parser_parse(dref!(driver).parser) {
+	    let errors = parser_get_errors(dref!(driver).parser);
+	    let count  = cog_arr_len(errors);
+	    report_syntax_errors(errors, count);
+	    eprintln!("Cog: {} parsing error[s] occurred", count);
+	}
 	
 	driver_free(driver);
     }

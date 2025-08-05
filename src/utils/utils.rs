@@ -1,5 +1,9 @@
 #![allow(unused)]
 use std::io::Read;
+use crate::dref;
+use crate::utils::string::*;
+use crate::utils::array::*;
+use crate::frontend::arena::*;
 
 #[macro_export] macro_rules! dref {
     ($ptr: expr) => {
@@ -23,5 +27,18 @@ pub fn open_file(path: &String) -> Option<String> {
 	Err(err)    => {
 	    return None;
 	}
+    }
+}
+
+pub fn string_to_lines(source: CogString, arena: *mut Arena) -> *mut CogArray<CogString> {
+    unsafe {
+	let slice = std::slice::from_raw_parts(source.data, source.len);
+	let slice_str = std::str::from_utf8_unchecked(slice);
+	
+	let mut n = 0;
+	let mut l = 0;
+	
+	
+	std::ptr::null_mut()
     }
 }

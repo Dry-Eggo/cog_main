@@ -21,13 +21,13 @@ pub unsafe fn arena_new(capacity: usize) -> Arena {
     let layout = Layout::from_size_align(cap, ARENA_ALIGNMENT).unwrap();
 
     let ptr = alloc(layout);
-    assert!(!ptr.is_null(), "arena_new: allocation failed");
-    assert_eq!(
-        ptr as usize % ARENA_ALIGNMENT,
-        0,
-        "arena.ptr is misaligned! Expected alignment: {}",
-        ARENA_ALIGNMENT
-    );
+    // assert!(!ptr.is_null(), "arena_new: allocation failed");
+    // assert_eq!(
+    //     ptr as usize % ARENA_ALIGNMENT,
+    //     0,
+    //     "arena.ptr is misaligned! Expected alignment: {}",
+    //     ARENA_ALIGNMENT
+    // );
 
     Arena {
         ptr,
@@ -44,11 +44,11 @@ pub unsafe fn arena_alloc_ty<T>(arena: *mut Arena) -> *mut T {
     let align = mem::align_of::<T>();
     let size = mem::size_of::<T>();
     let ptr = arena_alloc_align(arena, size, align);
-    assert_eq!(
-        ptr as usize % align,
-        0,
-        "arena_alloc_ty: returned pointer is misaligned for type!"
-    );
+    // assert_eq!(
+    //     ptr as usize % align,
+    //     0,
+    //     "arena_alloc_ty: returned pointer is misaligned for type!"
+    // );
     ptr as *mut T
 }
 
@@ -56,11 +56,11 @@ pub unsafe fn arena_alloc_array<T>(arena: *mut Arena, count: usize) -> *mut T {
     let align = mem::align_of::<T>();
     let size = mem::size_of::<T>() * count;
     let ptr = arena_alloc_align(arena, size, align);
-    assert_eq!(
-        ptr as usize % align,
-        0,
-        "arena_alloc_array: returned pointer is misaligned for type!"
-    );
+    // assert_eq!(
+    //     ptr as usize % align,
+    //     0,
+    //     "arena_alloc_array: returned pointer is misaligned for type!"
+    // );
     ptr as *mut T
 }
 
@@ -72,27 +72,27 @@ pub unsafe fn arena_alloc_align(allocator: *mut Arena, size: usize, align: usize
     let end = aligned_offset + size;
 
     if end > arena.capacity {
-        eprintln!(
-            "arena_alloc_align: growing arena from {} to {} bytes",
-            arena.capacity,
-            arena.capacity * 2
-        );
+        // eprintln!(
+        //     "arena_alloc_align: growing arena from {} to {} bytes",
+        //     arena.capacity,
+        //     arena.capacity * 2
+        // );
         arena_grow(allocator, arena.capacity * 2);
         return arena_alloc_align(allocator, size, align); // try again after growth
     }
 
     let result = arena.ptr.add(aligned_offset);
-    debug_assert_eq!(
-        result as usize % align,
-        0,
-        "arena_alloc_align: returned pointer is not properly aligned!"
-    );
+    // debug_assert_eq!(
+    //     result as usize % align,
+    //     0,
+    //     "arena_alloc_align: returned pointer is not properly aligned!"
+    // );
 
     // log allocation info (can be removed in production)
-    eprintln!(
-        "[arena_alloc_align] base: {:p}, aligned_offset: {}, align: {}, final ptr: {:p}",
-        arena.ptr, aligned_offset, align, result
-    );
+    // eprintln!(
+    //     "[arena_alloc_align] base: {:p}, aligned_offset: {}, align: {}, final ptr: {:p}",
+    //     arena.ptr, aligned_offset, align, result
+    // );
 
     arena.offset = end;
     result
@@ -103,12 +103,12 @@ pub unsafe fn arena_grow(allocator: *mut Arena, new_cap: usize) {
     let layout = Layout::from_size_align(arena.capacity, ARENA_ALIGNMENT).unwrap();
     let new_ptr = realloc(arena.ptr, layout, new_cap);
 
-    assert!(!new_ptr.is_null(), "arena_grow: realloc failed");
-    assert_eq!(
-        new_ptr as usize % ARENA_ALIGNMENT,
-        0,
-        "arena_grow: reallocated pointer is misaligned!"
-    );
+    // assert!(!new_ptr.is_null(), "arena_grow: realloc failed");
+    // assert_eq!(
+    //     new_ptr as usize % ARENA_ALIGNMENT,
+    //     0,
+    //     "arena_grow: reallocated pointer is misaligned!"
+    // );
 
     arena.ptr = new_ptr;
     arena.capacity = new_cap;

@@ -47,7 +47,7 @@ macro_rules! error {
 ///  parses the tokens into a list of Items which represent top-level constructs in Cog
 ///  returns an Option<usize>.
 ///        set to None on 'No Error' or Some (err_count) if error was encountered while parsing
-pub unsafe fn parser_parse (parser: *mut Parser) -> Option<usize> {
+pub unsafe fn parser_parse (parser: *mut Parser) -> bool {
 
     while parser_now(parser).is_some() {
 	if pmatch!(parser, Token::Func) {
@@ -56,11 +56,7 @@ pub unsafe fn parser_parse (parser: *mut Parser) -> Option<usize> {
 	parser_advance(parser);
     }
     
-    if cog_arr_len(dref!(parser).errors) == 0 {
-	return None
-    } else {
-	return Some(cog_arr_len(dref!(parser).errors))
-    }
+    cog_arr_len(dref!(parser).errors) == 0
 }
 
 unsafe fn parser_add_error (parser: *mut Parser, msg: &str, hint: Option<&str>, span: Span) {
