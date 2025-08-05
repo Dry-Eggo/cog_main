@@ -35,9 +35,8 @@ pub fn string_to_lines(source: CogString, arena: *mut Arena) -> *mut CogArray<Co
 	let arr = cog_arr_new(arena);
 	let slice = std::slice::from_raw_parts(source.data, source.len);
 	let slice_str = std::str::from_utf8_unchecked(slice);
-
-	slice_str.lines().map(|s| cog_arr_push(arr, cogstr_new(s, arena)));
-	
+	slice_str.lines().map(|s| cog_arr_push(arr, cogstr_new(s, arena))).collect();
+	// println!("{}", );
 	arr
     }
 }
