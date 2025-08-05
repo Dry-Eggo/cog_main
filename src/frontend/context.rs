@@ -40,6 +40,6 @@ impl<'a> Context<'a> {
     }
 
     pub fn get_function(&mut self, query: &String) -> Option<&mut FunctionInfo> {
-	self.functions.get(query)
+	self.functions.get_mut(query)
     }
 }

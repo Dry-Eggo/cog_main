@@ -22,8 +22,8 @@ impl<'a> FunctionInfo<'a> {
 	}
     }
 
-    pub fn get_name(&self) -> String {
-	return self.name;
+    pub fn get_name(&self) -> &String {
+	return &self.name;
     }
 }
 
@@ -38,7 +38,7 @@ impl<'a> FunctionTable<'a> {
 	self.functions.insert(name, info);
     }
 
-    pub fn get(&mut self, query: &String) -> Option<&mut FunctionInfo> {
-	self.functions.get_mut(query.as_str())
+    pub fn get_mut(&mut self, query: &str) -> Option<&mut FunctionInfo> {
+	self.functions.get_mut(query)
     }
 }

@@ -46,8 +46,8 @@ impl<'a> Semantics<'a> {
     }
 
     fn register_function(&mut self, func: &'a node::Function<'a>, span: &'a Span<'a>) {
-	let finfo = FunctionInfo::new(func.name, span.clone());
-	self.current_context.borrow_mut().add_function(func.name, finfo);
+	let finfo = FunctionInfo::new(func.name.clone(), span.clone());
+	self.current_context.borrow_mut().add_function(func.name.clone(), finfo);
     }
     
     fn register_item(&mut self, item: &'a Spanned<'a, Box<Item<'a>>>) {
