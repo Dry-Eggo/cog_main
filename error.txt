@@ -1,0 +1,22 @@
+[arena_alloc_align] base: 0x5ef877d76500, aligned_offset: 0, align: 8, final ptr: 0x5ef877d76500
+[arena_alloc_align] base: 0x5ef877d76500, aligned_offset: 24, align: 1, final ptr: 0x5ef877d76518
+[arena_alloc_align] base: 0x5ef877d76500, aligned_offset: 40, align: 8, final ptr: 0x5ef877d76528
+[arena_alloc_align] base: 0x5ef877d76500, aligned_offset: 112, align: 16, final ptr: 0x5ef877d76570
+[arena_alloc_align] base: 0x5ef877d76500, aligned_offset: 120, align: 8, final ptr: 0x5ef877d76578
+[arena_alloc_align] base: 0x5ef877d76500, aligned_offset: 152, align: 8, final ptr: 0x5ef877d76598
+[arena_alloc_align] base: 0x5ef877d76500, aligned_offset: 408, align: 8, final ptr: 0x5ef877d76698
+[arena_alloc_align] base: 0x5ef877d76500, aligned_offset: 920, align: 8, final ptr: 0x5ef877d76898
+[arena_alloc_align] base: 0x5ef877d76500, aligned_offset: 968, align: 8, final ptr: 0x5ef877d768c8
+arena_alloc_align: growing arena from 1024 to 2048 bytes
+[arena_alloc_align] base: 0x5ef877d76d10, aligned_offset: 1000, align: 8, final ptr: 0x5ef877d770f8
+[arena_alloc_align] base: 0x5ef877d76d10, aligned_offset: 1032, align: 8, final ptr: 0x5ef877d77118
+[arena_alloc_align] base: 0x5ef877d76d10, aligned_offset: 1056, align: 8, final ptr: 0x5ef877d77130
+[arena_alloc_align] base: 0x5ef877d76d10, aligned_offset: 1136, align: 16, final ptr: 0x5ef877d77180
+[arena_alloc_align] base: 0x5ef877d76d10, aligned_offset: 1160, align: 8, final ptr: 0x5ef877d77198
+[arena_alloc_align] base: 0x5ef877d76d10, aligned_offset: 1200, align: 16, final ptr: 0x5ef877d771c0
+Cog: 1 parsing error[s] occurred
+
+thread 'main' panicked at src/frontend/parser.rs:71:5:
+misaligned pointer dereference: address must be a multiple of 0x8 but is 0x6520676e69737261
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+thread caused non-unwinding panic. aborting.
