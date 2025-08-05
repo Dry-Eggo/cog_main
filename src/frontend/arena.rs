@@ -59,7 +59,7 @@ pub unsafe fn arena_alloc_align (allocator: *mut Arena, size: usize, align: usiz
 
 pub unsafe fn arena_grow(allocator: *mut Arena, new_cap: usize) {
     let arena = &mut *allocator;
-    let layout = Layout::from_size_align(arena.capacity, mem::align_of::<u128>()).unwrap();
+    let layout = Layout::from_size_align(arena.capacity, 16).unwrap();
     let new_ptr = realloc(arena.ptr, layout, new_cap);
 
     arena.ptr = new_ptr;
@@ -71,7 +71,7 @@ pub unsafe fn arena_reset(allocator: *mut Arena) {
 }
 
 pub unsafe fn arena_free(allocator: *mut Arena) {
-    let layout = Layout::from_size_align((*allocator).capacity, mem::align_of::<u128>()).unwrap();
+    let layout = Layout::from_size_align((*allocator).capacity, 16).unwrap();
     dealloc((*allocator).ptr, layout);
     (*allocator).ptr = ptr::null_mut();
     (*allocator).capacity = 0;
