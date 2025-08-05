@@ -56,7 +56,16 @@ pub unsafe fn lexer_lex(lexer: *mut Lexer) {
 	}
 
 	if lexer_now(lexer).unwrap().is_alphabetic() {
-	    
+	    let start_line = (*lexer).line;
+	    let start_col  = (*lexer).col;
+	    let mut buffer = String::new();
+	    while lexer_now(lexer).is_some() && lexer_now(lexer).unwrap().is_alphanumeric()
+		&& lexer_now(lexer).unwrap() == '_' {
+		    
+		    buffer.push(lexer_advance(lexer));
+		}
+
+	    ;
 	}
     }
 }
