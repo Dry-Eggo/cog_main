@@ -4,10 +4,25 @@ use crate::utils::string::*;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Span {
-    filename: CogString,
-    line:     usize,
-    cols:     usize,
-    cole:     usize,
+    pub filename: CogString,
+    pub line:     usize,
+    pub cols:     usize,
+    pub cole:     usize,
+}
+
+impl Span {
+    pub fn display(&self) -> String {
+	unsafe { format!("{}:{}:{}", cogstr_to_str(self.filename), self.line, self.cols) }
+    }
+
+    pub fn merge(&self, other: Self) -> Self {
+	Self {
+	    filename: self.filename,
+	    line:     self.line,
+	    cols:     self.cols,
+	    cole:     self.cole
+	}
+    }
 }
 
 #[derive(Debug, Copy, Clone)]

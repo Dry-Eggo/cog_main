@@ -19,7 +19,7 @@ pub unsafe fn cogstr_new (s: &str, arena: *mut Arena) -> CogString {
 	(cogstr_new($str, $arena))
     };
 
-    ($str: ident, $arena: expr) => {
+    ($str: expr, $arena: expr) => {
 	(cogstr_from_string($str, $arena))
     }
 }
@@ -28,7 +28,7 @@ pub unsafe fn cogstr_from_string (input: String, arena: *mut Arena) -> CogString
     let bytes = input.as_bytes();
     let len   = bytes.len();
 
-    let dest = arena_alloc_align(arena, len, std::mem::align_of::<u8>());
+    let dest = arena_alloc(arena, len);
     ptr::copy_nonoverlapping(bytes.as_ptr(), dest, len);
     
     CogString {

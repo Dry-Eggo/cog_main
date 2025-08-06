@@ -7,12 +7,13 @@ use crate::dref;
 use crate::utils::string::*;
 use crate::utils::array::*;
 
-pub type SpannedStmt = Spanned<*mut Stmt>;
-pub type SpannedItem = Spanned<*mut Item>;
-pub type SpannedExpr = Spanned<*mut Expr>;
+pub type SpannedStmt = Spanned<Stmt>;
+pub type SpannedItem = Spanned<Item>;
+pub type SpannedExpr = Spanned<Expr>;
 
 pub enum Item {
-    FunctionDef(*mut FunctionDef),
+    FunctionDef(FunctionDef),
+    TypeDef,
 }
 
 pub enum Stmt {
@@ -28,6 +29,6 @@ pub enum Expr {
 }
 
 pub struct FunctionDef {
-    name: CogString,
-    body: *mut Stmt,
+    pub name: CogString,
+    pub body: Option<SpannedStmt>,
 }

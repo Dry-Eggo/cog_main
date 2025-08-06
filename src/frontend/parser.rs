@@ -10,14 +10,16 @@ use crate::cogstr;
 use crate::utils::string::*;
 use crate::utils::array::*;
 
-pub struct Parser {
-    cursor: usize,
-    max:    usize,
-    arena:  *mut Arena,
-    tokens: *mut CogArray<Spanned<Token>>,
+pub type RootNode = *mut CogArray<Option<SpannedItem>>;
 
-    pub root:   *mut CogArray<SpannedItem>,
-    errors: *mut CogArray<*mut SyntaxError>
+pub struct Parser {
+    cursor:     usize,
+    max:        usize,
+    arena:      *mut Arena,
+    tokens:     *mut CogArray<Spanned<Token>>,
+
+    pub root:   RootNode,
+    errors:     *mut CogArray<*mut SyntaxError>
 }
 
 
@@ -47,16 +49,22 @@ macro_rules! error {
 ///  parses the tokens into a list of Items which represent top-level constructs in Cog
 ///  returns an Option<usize>.
 ///        set to None on 'No Error' or Some (err_count) if error was encountered while parsing
-pub unsafe fn parser_parse (parser: *mut Parser) -> bool {
+pub unsafe fn parser_parse (parser: *mut Parser) -> Option<usize> {
 
     while parser_now(parser).is_some() {
 	if pmatch!(parser, Token::Func) {
-	    parse_function(parser);
+	    let func = parse_function(parser);
+	    cog_arr_push(dref!(parser).root, func);
 	}
 	parser_advance(parser);
     }
     
-    cog_arr_len(dref!(parser).errors) == 0
+    let err_count = cog_arr_len(dref!(parser).errors);
+    if err_count > 0 {
+	Some(err_count)
+    } else {
+	None
+    }
 }
 
 unsafe fn parser_add_error (parser: *mut Parser, msg: &str, hint: Option<&str>, span: Span) {
@@ -104,16 +112,62 @@ unsafe fn expect (parser: *mut Parser, tok: Token) -> bool {
     false
 }
 
-unsafe fn parse_function (parser: *mut Parser) {
+unsafe fn expect_identifer (parser: *mut Parser) -> Option<CogString> {
+    if let Token::Identifier(name) = parser_now(parser).unwrap().item {
+	parser_advance(parser);
+	return Some(name);
+    } else {
+	error!(parser, "expected identifer before token", None, parser_now(parser).unwrap().span);
+	None
+    }	    
+}
+
+unsafe fn parse_function (parser: *mut Parser) -> Option<SpannedItem> {
     let function = arena_alloc_ty::<FunctionDef>(dref!(parser).arena);
+    let start_span = parser_now(parser).unwrap().span;
     parser_advance(parser); // the 'fn' keyword
 
-    let function_name = {
-	if let Token::Identifier(name) = parser_now(parser).unwrap().item {
-	    name
-	} else {
-	    error!(parser, "expected name after 'fn", None, parser_now(parser).unwrap().span);
-	    cogstr!("error", dref!(parser).arena)
-	}	
+    let function_name = if let Some(name) = expect_identifer(parser) {
+	name
+    } else {
+	cogstr!("error", dref!(parser).arena)
     };
+
+    // TODO: parameters will be delayed till future stages
+    expect(parser, Token::OParen);
+    expect(parser, Token::CParen);
+
+    let mut function_body = None;
+    if (pmatch!(parser, Token::OBrace)) {
+	parser_advance(parser);
+	function_body = parse_body(parser);
+	expect(parser, Token::CBrace);
+    } else {
+	todo!("Parse foward declaration")
+    }
+
+    let end_span = parser_now(parser).unwrap().span;    
+    Some(span_wrap(start_span.merge(end_span), Item::FunctionDef(
+	FunctionDef {
+	    name: function_name,
+	    body: function_body
+	}
+    )))
+}
+
+unsafe fn parse_body (parser: *mut Parser) -> Option<SpannedStmt> {
+    let p = &mut *parser;
+    let stmts = cog_arr_new(p.arena);
+    let start_span = parser_now(parser).unwrap().span;
+
+    while !pmatch!(parser, Token::CBrace) {
+	let stmt = parse_stmt(parser);
+    }
+    
+    let end_span = parser_now(parser).unwrap().span;    
+    Some(span_wrap(start_span.merge(end_span), Stmt::CompoundStmt(stmts)))
+}
+
+unsafe fn parse_stmt (parser: *mut Parser) -> Option<SpannedStmt> {
+    todo!()
 }

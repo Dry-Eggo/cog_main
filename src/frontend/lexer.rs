@@ -19,12 +19,12 @@ pub struct Lexer {
     pub tokens: *mut CogArray<Spanned<Token>>
 }
 
-pub unsafe fn lexer_new(arena: *mut Arena, source: CogString) -> *mut Lexer {
+pub unsafe fn lexer_new(arena: *mut Arena, source: CogString, path: CogString) -> *mut Lexer {
     let lexer_ptr = arena_alloc_ty::<Lexer>(arena);
     let lexer = &mut *lexer_ptr;
 
     lexer.source = source;
-    lexer.filename = cogstr_new("foo.txt", arena);
+    lexer.filename = path;
     
     lexer.pos    = 0;
     lexer.line   = 1;
