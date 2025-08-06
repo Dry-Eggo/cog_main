@@ -7,20 +7,75 @@ use crate::cogstr;
 use crate::utils::string::*;
 use crate::utils::array::*;
 use crate::utils::utils::*;
+use crate::utils::map::*;
 
 use crate::frontend::parser:: {Parser, RootNode};
 use crate::frontend::ast::*;
+use crate::frontend::objects::*;
 use crate::frontend::error::*;
 
+
+struct Context {
+    parent: Option<*mut Context>,
+    env:    *mut CogMap<CogString, *mut SymbolInfo>
+}
+
+unsafe fn context_new (
+    parent: Option<*mut Context>,
+    arena: *mut Arena
+) -> *mut Context {    
+    let ctx = arena_alloc_ty::<Context>(arena);
+    dref!(ctx).parent = parent;
+    dref!(ctx).env    = cogmap_new(arena);
+    ctx
+}
+
+/// Returns old info if it already existed.
+unsafe fn context_add (ctx: *mut Context, name: CogString, sym: *mut SymbolInfo) -> Option<*const SymbolInfo> {
+    if let Some(old_ptr) = cogmap_insert(dref!(ctx).env, &name, &sym) {
+	return Some(*old_ptr)
+    }
+    None
+}
+
+unsafe fn context_has (ctx: *mut Context, name: CogString) -> bool {
+    if let Some(ptr) = cogmap_get(dref!(ctx).env, &name) {
+	return true
+    }
+    false
+}
+
+unsafe fn context_get (ctx: *mut Context, name: CogString) -> Option<*const SymbolInfo> {
+    if let Some(ptr) = cogmap_get(dref!(ctx).env, &name) {
+	return Some(*ptr)
+    }
+    None
+}
+
+unsafe fn context_get_mut (ctx: *mut Context, name: CogString) -> Option<*mut SymbolInfo> {
+    if let Some(ptr) = cogmap_get(dref!(ctx).env, &name) {
+	return Some(*ptr as *mut _)
+    }
+    None
+}
+    
 pub struct Semantics {
     root: RootNode,
-    arena: *mut Arena
+
+    root_ctx: *mut Context,
+    current_ctx: *mut Context,
+    
+    arena: *mut Arena,	
 }
 
 pub unsafe fn semantics_new (root: RootNode, arena: *mut Arena) -> *mut Semantics {
     let sema = arena_alloc_ty::<Semantics>(arena);
     dref!(sema).root = root;
-    dref!(sema).arena = arena;
+
+    dref!(sema).root_ctx    = context_new(None, arena);
+    dref!(sema).current_ctx = dref!(sema).root_ctx;
+    
+    dref!(sema).arena = arena;    
     sema
 }
 

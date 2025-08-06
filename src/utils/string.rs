@@ -2,12 +2,34 @@
 #![allow(unsafe_op_in_unsafe_fn)]
 
 use crate::frontend::arena::*;
+use crate::utils::map::Hashable;
+
 use std::ptr;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct CogString {
     pub data: *mut u8,
     pub len:  usize
+}
+
+impl Hashable for CogString {
+    fn hash(&self) -> usize {
+	unsafe {
+	    let string_ver = cogstr_to_str(*self);
+	    djb2_hash(string_ver) as usize
+	}
+    }
+}
+
+
+// linK: https://mojoauth.com/hashing/bernsteins-hash-djb2-in-rust/
+fn djb2_hash(input: &str) -> u64 {
+    let mut hash: u64 = 5381; // Starting value for the hash
+    for byte in input.bytes() {
+        // Update the hash value with bitwise operations
+        hash = (hash << 5).wrapping_add(hash).wrapping_add(byte as u64);
+    }
+    hash // Return the final hash value
 }
 
 pub unsafe fn cogstr_new (s: &str, arena: *mut Arena) -> CogString {

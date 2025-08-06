@@ -68,7 +68,7 @@ pub unsafe fn cogmap_insert<K: Hashable + PartialEq, V> (
 }
 
 /// Attempts to fetch a value associated with the given 'key'.
-/// Returns a const pointer to the value if it exists else returns None
+/// Returns a pointer to the value if it exists else returns None
 pub unsafe fn cogmap_get<K: Hashable + PartialEq, V> (
     map: *mut CogMap<K, V>,
     key: &K
@@ -83,6 +83,18 @@ pub unsafe fn cogmap_get<K: Hashable + PartialEq, V> (
 	}
 	
 	current = dref!(entry).next;
+    }
+    None
+}
+
+/// Attempts to fetch a value associated with the given 'key'.
+/// Returns a mutable pointer to the value if it exists else returns None
+pub unsafe fn cogmap_get_mut<K: Hashable + PartialEq, V> (
+    map: *mut CogMap<K, V>,
+    key: &K
+) -> Option<*mut V> {
+    if let Some(ptr) = cogmap_get(map, key) {
+	return Some(ptr as *mut V)
     }
     None
 }
