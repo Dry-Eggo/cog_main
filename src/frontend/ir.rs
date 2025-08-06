@@ -17,8 +17,8 @@ pub enum HirItem {
 }
 
 pub struct HirFuncDef {
-    name:      Option<CogString>,
-    ret_type:  Option<HirType>,
+    pub name:      Option<CogString>,
+    pub ret_type:  Option<HirType>,
 }
 
 pub enum HirType {
@@ -33,7 +33,7 @@ pub enum HirType {
 pub struct HirModule {
     arena: *mut Arena,
     
-    items: *mut CogArray<HirItem>,
+    pub items: *mut CogArray<HirItem>,
 }
 
 pub unsafe fn hir_module_new (arena: *mut Arena) -> *mut HirModule {
@@ -43,6 +43,14 @@ pub unsafe fn hir_module_new (arena: *mut Arena) -> *mut HirModule {
     ptr
 }
 
+
+/// Returns a pointer to function item in the module
+/// -----------------------------------------------
+/// let func = hir_function(module);
+/// hir_func_set_name(func, cogstr!("main", arena));
+/// hir_func_set_return_type(func, ty);
+/// hir_func_return_value(func, hir_expr);
+/// ------------------------------------------------
 pub unsafe fn hir_function (module: *mut HirModule) -> *mut HirFuncDef {
     let mut funcdef = arena_contruct(dref!(module).arena, HirFuncDef {
 	name: None,
@@ -50,5 +58,14 @@ pub unsafe fn hir_function (module: *mut HirModule) -> *mut HirFuncDef {
     });
     
     let item = HirItem::FunctionDef(funcdef);
+    cog_arr_push(dref!(module).items, item);
     return funcdef;
+}
+
+pub unsafe fn hir_func_set_name (func: *mut HirFuncDef, name: CogString) {
+    dref!(func).name = Some(name);
+}
+
+pub unsafe fn hir_func_set_return_type (func: *mut HirFuncDef, ty: HirType) {
+    dref!(func).ret_type = Some(ty);
 }

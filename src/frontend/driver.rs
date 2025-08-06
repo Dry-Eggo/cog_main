@@ -3,6 +3,7 @@
 
 use crate::Args;
 use crate::frontend::arena::*;
+use crate::backend::cbackend::*;
 use crate::dref;
 use crate::cogstr;
 use crate::utils::string::*;
@@ -19,6 +20,9 @@ pub struct Driver {
     lexer:  *mut Lexer,
     parser: *mut Parser,
     sema  : *mut Semantics,
+
+    // TODO: proper backend dispath. C by default for now
+    cctx:   *mut CContext,
     
     arena:  *mut Arena,
     source_lines: *mut CogArray<CogString>
@@ -58,7 +62,13 @@ pub fn driver_run (args: Args) {
 	};
 	dref!(driver).sema = semantics_new(root, dref!(driver).arena);
 	if let Some (()) = semantics_analyze_root(dref!(driver).sema) {
-	    
+	    todo!("semantic errors");
+	}
+
+	let ir_mod = semantics_get_module(dref!(driver).sema);
+	dref!(driver).cctx = cctx_new(dref!(driver).arena, ir_mod);
+	if !cctx_generate(dref!(driver).cctx) {
+	    todo!("cctx error");
 	}
 	driver_free(driver);
     }

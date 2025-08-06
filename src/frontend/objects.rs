@@ -20,9 +20,9 @@ pub struct VarInfo {
 }
 
 pub struct FuncInfo {
-    name:             CogString,
-    declaration_span: Span,
-    param_count:      usize,
+    pub name:             CogString,
+    pub declaration_span: Span,
+    pub param_count:      usize,
     /* Not Implemented yet */
     /* params:        CogArray<*mut ParamInfo> */
 }

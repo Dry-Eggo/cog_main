@@ -83,6 +83,10 @@ pub unsafe fn semantics_new (root: RootNode, arena: *mut Arena) -> *mut Semantic
     sema
 }
 
+pub unsafe fn semantics_get_module (sema: *mut Semantics) -> *mut HirModule {
+    dref!(sema).irmod
+}
+
 /// Analyzes the parsed ast gotten from the parser
 /// returns Option<(usize, usize)> representing (Warning Count, Error Count) or None
 pub unsafe fn semantics_analyze_root (sema: *mut Semantics) -> Option<()> {
@@ -92,6 +96,19 @@ pub unsafe fn semantics_analyze_root (sema: *mut Semantics) -> Option<()> {
     semantics_run_first_pass(sema);
     
     None
+}
+
+unsafe fn semantics_run_second_pass (sema: *mut Semantics) {
+    let root = dref!(sema).root;
+    for n in 0..cog_arr_len(root) {
+	let item = cog_arr_get(root, n);
+
+	if let Some(ref mut spanned) = *item {
+	    if let Item::FunctionDef (ref mut function_def) = spanned.item {
+		analyze_function(sema, function_def);
+	    }
+	}
+    }    
 }
 
 unsafe fn semantics_run_first_pass (sema: *mut Semantics) {
@@ -111,8 +128,28 @@ unsafe fn register_function (sema: *mut Semantics, func: *mut FunctionDef, span:
     let function_def = &mut *func;
     let arena        = dref!(sema).arena;
     
-    println!("Function: {}", cogstr_to_str(function_def.name));
-    
     let info = symbol_info_new(arena, SymbolInfo::FunctionInfo (func_info_new(function_def.name, span, 0)));
-    context_add(dref!(sema).current_ctx, function_def.name, info);
+    context_add(dref!(sema).root_ctx, function_def.name, info);
+}
+
+unsafe fn analyze_function (sema: *mut Semantics, func: *mut FunctionDef) {
+    let function_def = &mut *func;
+    let arena        = dref!(sema).arena;
+    
+    match context_get(dref!(sema).root_ctx, function_def.name) {
+	Some (syminfo) => {
+	    match *syminfo {
+		SymbolInfo::FunctionInfo (ref finfo) => {
+		    let function = hir_function(dref!(sema).irmod);
+		    hir_func_set_name(function, finfo.name);
+
+		    if cogstr_to_str(finfo.name) == "main" {
+			hir_func_set_return_type(function, HirType::Integer(true));
+		    }
+		}
+		_ => unreachable!()
+	    }
+	}
+	_ => unreachable!()
+    }
 }
