@@ -80,3 +80,38 @@ pub unsafe fn cogmap_get<K: Hashable + PartialEq, V> (map: *mut CogMap<K, V>, ke
     }
     None
 }
+
+/// Attempts to remove the value associated with the given 'key'.
+/// Returns a pointer to the removed value if it existed, else returns None.
+///
+/// NOTE: Only unlinks the entry; memory is not freed due to arena allocation.
+pub unsafe fn cogmap_remove<K: Hashable + PartialEq, V>(
+    map: *mut CogMap<K, V>,
+    key: &K
+) -> Option<*const V> {
+    let index = key.hash() % MAX_BUCKETS;
+    let head = &mut dref!(map).entries[index];
+    let mut current = *head;
+    let mut prev: Option<*mut Bucket<K, V>> = None;
+
+    while let Some(entry) = current {
+        if *dref!(entry).key == *key {
+            let value = dref!(entry).value;
+
+            if let Some(prev_entry) = prev {
+                // Link previous.next to current.next
+                dref!(prev_entry).next = dref!(entry).next;
+            } else {
+                // Head of chain is being removed
+                *head = dref!(entry).next;
+            }
+
+            return Some(value);
+        }
+
+        prev = current;
+        current = dref!(entry).next;
+    }
+
+    None
+}
