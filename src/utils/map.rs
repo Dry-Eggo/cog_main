@@ -67,9 +67,8 @@ pub unsafe fn cogmap_insert<K: Hashable + PartialEq, V> (map: *mut CogMap<K, V>,
 /// Returns a const pointer to the value if it exists else returns None
 pub unsafe fn cogmap_get<K: Hashable + PartialEq, V> (map: *mut CogMap<K, V>, key: &K) -> Option<*const V> {
     let index = key.hash() % MAX_BUCKETS;
-    let mut head = &mut dref!(map).entries[index];
-
-    let mut current = *head;
+    let mut current = dref!(map).entries[index];
+    
     while let Some(entry) = current {
 	if *dref!(entry).key == *key {
 	    let value = dref!(entry).value;
