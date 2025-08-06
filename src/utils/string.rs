@@ -6,7 +6,7 @@ use crate::utils::map::Hashable;
 
 use std::ptr;
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug)]
 pub struct CogString {
     pub data: *mut u8,
     pub len:  usize
@@ -21,6 +21,11 @@ impl Hashable for CogString {
     }
 }
 
+impl PartialEq for CogString {
+    fn eq(&self, other: &Self) -> bool {
+	unsafe { return cogstr_eq(*self, *other) }
+    }
+}
 
 // linK: https://mojoauth.com/hashing/bernsteins-hash-djb2-in-rust/
 fn djb2_hash(input: &str) -> u64 {
@@ -59,7 +64,9 @@ pub unsafe fn cogstr_from_string (input: String, arena: *mut Arena) -> CogString
     }
 }
 
-pub unsafe fn cogstr_to_str (s: CogString) -> &'static str {
+/// Converts 's' to Rust '&str' type
+/// the returned string is valid as long as 's' is valid
+pub unsafe fn cogstr_to_str<'a> (s: CogString) -> &'a str {
     let slice = std::slice::from_raw_parts(s.data, s.len);
     std::str::from_utf8_unchecked(slice)
 }

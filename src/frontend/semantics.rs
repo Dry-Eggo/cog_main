@@ -11,6 +11,8 @@ use crate::utils::map::*;
 
 use crate::frontend::parser:: {Parser, RootNode};
 use crate::frontend::ast::*;
+use crate::frontend::ir::*;
+use crate::frontend::token::  {Span};
 use crate::frontend::objects::*;
 use crate::frontend::error::*;
 
@@ -64,6 +66,8 @@ pub struct Semantics {
 
     root_ctx: *mut Context,
     current_ctx: *mut Context,
+
+    irmod:       *mut HirModule,
     
     arena: *mut Arena,	
 }
@@ -97,13 +101,18 @@ unsafe fn semantics_run_first_pass (sema: *mut Semantics) {
 
 	if let Some(ref mut spanned) = *item {
 	    if let Item::FunctionDef (ref mut function_def) = spanned.item {
-		register_function(sema, function_def);
+		register_function(sema, function_def, spanned.span);
 	    }
 	}
     }    
 }
 
-unsafe fn register_function (sema: *mut Semantics, func: *mut FunctionDef) {
+unsafe fn register_function (sema: *mut Semantics, func: *mut FunctionDef, span: Span) {
     let function_def = &mut *func;
+    let arena        = dref!(sema).arena;
+    
     println!("Function: {}", cogstr_to_str(function_def.name));
+    
+    let info = symbol_info_new(arena, SymbolInfo::FunctionInfo (func_info_new(function_def.name, span, 0)));
+    context_add(dref!(sema).current_ctx, function_def.name, info);
 }

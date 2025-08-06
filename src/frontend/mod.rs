@@ -6,4 +6,5 @@ pub mod parser;
 pub mod semantics;
 pub mod objects;
 pub mod ast;
+pub mod ir;
 pub mod error;

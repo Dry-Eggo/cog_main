@@ -60,6 +60,12 @@ pub unsafe fn arena_alloc_ty<T>(arena: *mut Arena) -> *mut T {
     ptr as *mut T
 }
 
+pub unsafe fn arena_contruct<T> (arena: *mut Arena, x: T) -> *mut T {
+    let ptr = arena_alloc_ty(arena);
+    *ptr = x;
+    ptr
+}
+
 pub unsafe fn arena_alloc_array<T>(arena: *mut Arena, count: usize) -> *mut T {
     let size = mem::size_of::<T>() * count;
     let ptr = arena_alloc(arena, size);
