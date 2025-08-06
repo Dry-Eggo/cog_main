@@ -39,23 +39,44 @@ pub unsafe fn cogmap_new<K: Hashable, V> (arena: *mut Arena) -> *mut CogMap<K, V
 pub unsafe fn cogmap_insert<K: Hashable + PartialEq, V> (map: *mut CogMap<K, V>, key: &K, value: &V) -> Option<*const V> {
     
     let index = key.hash() % MAX_BUCKETS;
-    let mut bucket = dref!(map).entries[index];
+    let mut head = &mut dref!(map).entries[index];
 
-    while let Some(entry) = bucket {
-	if dref!(entry).key == key {
+    let mut current = *head;
+    while let Some(entry) = current {
+	if *dref!(entry).key == *key {
 	    let old_value = dref!(entry).value;
 	    dref!(entry).value  = value;
 	    return Some(old_value)
 	}
 	
-	bucket = dref!(entry).next;
+	current = dref!(entry).next;
     }
     
     let new_bucket = arena_alloc_ty::<Bucket<K, V>>(dref!(map).arena);
     dref!(new_bucket).key   = key;
     dref!(new_bucket).value = value;
     dref!(new_bucket).next  = None;
-    bucket = Some(new_bucket);
+    dref!(new_bucket).next  = *head;
+    
+    *head = Some(new_bucket);
 	
+    None
+}
+
+/// Attempts to fetch a value associated with the given 'key'.
+/// Returns a const pointer to the value if it exists else returns None
+pub unsafe fn cogmap_get<K: Hashable + PartialEq, V> (map: *mut CogMap<K, V>, key: &K) -> Option<*const V> {
+    let index = key.hash() % MAX_BUCKETS;
+    let mut head = &mut dref!(map).entries[index];
+
+    let mut current = *head;
+    while let Some(entry) = current {
+	if *dref!(entry).key == *key {
+	    let value = dref!(entry).value;
+	    return Some(value)
+	}
+	
+	current = dref!(entry).next;
+    }
     None
 }
