@@ -36,7 +36,11 @@ pub unsafe fn cogmap_new<K: Hashable, V> (arena: *mut Arena) -> *mut CogMap<K, V
 /// Attempts to insert a value into the hashmap.
 /// If value already exist, it returns a pointer to the original value and replaces it with the 'value'
 /// else return None and inserts a new entry
-pub unsafe fn cogmap_insert<K: Hashable + PartialEq, V> (map: *mut CogMap<K, V>, key: &K, value: &V) -> Option<*const V> {
+pub unsafe fn cogmap_insert<K: Hashable + PartialEq, V> (
+    map: *mut CogMap<K, V>,
+    key: &K,
+    value: &V
+) -> Option<*const V> {
     
     let index = key.hash() % MAX_BUCKETS;
     let mut head = &mut dref!(map).entries[index];
@@ -65,7 +69,10 @@ pub unsafe fn cogmap_insert<K: Hashable + PartialEq, V> (map: *mut CogMap<K, V>,
 
 /// Attempts to fetch a value associated with the given 'key'.
 /// Returns a const pointer to the value if it exists else returns None
-pub unsafe fn cogmap_get<K: Hashable + PartialEq, V> (map: *mut CogMap<K, V>, key: &K) -> Option<*const V> {
+pub unsafe fn cogmap_get<K: Hashable + PartialEq, V> (
+    map: *mut CogMap<K, V>,
+    key: &K
+) -> Option<*const V> {
     let index = key.hash() % MAX_BUCKETS;
     let mut current = dref!(map).entries[index];
     
