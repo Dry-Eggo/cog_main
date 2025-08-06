@@ -67,6 +67,7 @@ pub fn driver_run (args: Args) {
 
 	let ir_mod = semantics_get_module(dref!(driver).sema);
 	dref!(driver).cctx = cctx_new(dref!(driver).arena, ir_mod);
+	println!("Here");
 	if !cctx_generate(dref!(driver).cctx) {
 	    todo!("cctx error");
 	}

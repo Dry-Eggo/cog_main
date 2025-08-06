@@ -94,6 +94,7 @@ pub unsafe fn semantics_analyze_root (sema: *mut Semantics) -> Option<()> {
     // so we return Option<()>. will be changed.
 
     semantics_run_first_pass(sema);
+    semantics_run_second_pass(sema);
     
     None
 }
@@ -147,9 +148,9 @@ unsafe fn analyze_function (sema: *mut Semantics, func: *mut FunctionDef) {
 			hir_func_set_return_type(function, HirType::Integer(true));
 		    }
 		}
-		_ => unreachable!()
+		_ => unreachable!("finfo should not be VarInfo")
 	    }
 	}
-	_ => unreachable!()
+	_ => unreachable!("finfo should not be None")
     }
 }
