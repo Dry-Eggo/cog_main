@@ -41,16 +41,16 @@ pub unsafe fn cogmap_insert<K: Hashable + PartialEq, V> (map: *mut CogMap<K, V>,
     let index = key.hash() % MAX_BUCKETS;
     let mut bucket = dref!(map).entries[index];
 
-     while let Some(entry) = bucket {
+    while let Some(entry) = bucket {
 	if dref!(entry).key == key {
 	    let old_value = dref!(entry).value;
 	    dref!(entry).value  = value;
 	    return Some(old_value)
 	}
-
+	
 	bucket = dref!(entry).next;
     }
-
+    
     let new_bucket = arena_alloc_ty::<Bucket<K, V>>(dref!(map).arena);
     dref!(new_bucket).key   = key;
     dref!(new_bucket).value = value;
