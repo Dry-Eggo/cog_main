@@ -28,7 +28,7 @@ impl<'a> NasmContext<'a> {
 	    buffer += "\n";
 	}
 	if self.functions.len() != 0 {
-	    buffer += "section .text:\n";
+	    buffer += "section .text\n";
 	    buffer += &self.functions;
 	}
 	if self.data_section.len() != 0 {
@@ -77,7 +77,11 @@ impl<'a> NasmContext<'a> {
 		self.functions += &format!("\n\tpush rbp");
 		self.functions += &format!("\n\tmov rbp, rsp");
 
-		self.functions += &format!("\n\tleave");
+		if label.name == "main" {
+		    self.functions += &format!("\n\tmov eax, 0");
+		}
+		
+		self.functions += &format!("\n\tpop rbp");
 		self.functions += &format!("\n\tret");
 	    }
 	    _ => unreachable!()
