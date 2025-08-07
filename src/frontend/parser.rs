@@ -2,7 +2,7 @@
 
 use crate::frontend::driver::Driver;
 use crate::frontend::token:: {Token, Spanned, Span};
-use crate::frontend::ast:: {SpannedItem};
+use crate::frontend::ast:: {SpannedItem, Item, FnDef};
 use crate::frontend::error::SyntaxError;
 
 pub struct Parser<'a> {
@@ -25,56 +25,55 @@ impl<'a> Parser<'a> {
 	}
     }
 
-
-    fn matches (&self, tok: &Token) -> bool {
+    fn matches (&self, tok: Token) -> bool {
 	self.get() == tok
     }
 
-    fn expect (&mut self, tok: &Token) -> bool {
+    fn expect (&mut self, tok: Token) -> bool {
 	if !self.matches(tok) {
 	    return false
 	}
-
 	self.advance();
 	true
     }
 
-    fn expect_err (&mut self, tok: &Token) -> bool {
-	if !self.expect (tok) {
+    fn expect_err (&mut self, tok: Token) -> bool {
+	if !self.matches (tok) {
 	    let span = self.get_span();
 	    let got  = self.get();
-	    self.errors.push(SyntaxError::new (format!("expected '{}' but got '{}' instead", tok, got), *span));
+	    self.errors.push(SyntaxError::new (format!("expected '{}' but got '{}' instead", tok, got), span));
 	    return false
 	}
+	self.advance();
 	true
     }
 
     fn expect_id (&mut self) -> &'a str {
-	let tok = self.get();
-	
-	if let Token::Identifier (s) = tok {
-	    return s
+	match self.get () {
+	    Token::Identifier (s) => {
+		self.advance ();
+		s
+	    }
+	    _ => {
+		let span = self.get_span ();
+		self.errors.push (SyntaxError::new ("expected an identifier".to_owned(),  span));
+		"error"
+	    }
 	}
-	
-	let span = self.get_span();
-	self.errors.push (SyntaxError::new (format!("expected an identifer"), *span));
-	"error"
     }
     
-    fn get (&self) -> &Token {
-	
+    fn get (&self) -> Token<'a> {	
 	if self.pos >= self.max {
-	    return &self.tokens.last().unwrap().item
-	}
-	
-	&self.tokens[self.pos].item
+	    return self.tokens.last().unwrap().item
+	}	
+	self.tokens[self.pos].item
     }
     
-    fn get_span (&self) -> &Span {
+    fn get_span (&self) -> Span {
 	if self.pos >= self.max {
-	    return &self.tokens.last().unwrap().span
+	    return self.tokens.last().unwrap().span
 	}
-	&self.tokens[self.pos].span	
+	self.tokens[self.pos].span	
     }
 
     fn advance (&mut self) {
@@ -82,18 +81,15 @@ impl<'a> Parser<'a> {
     }
     
     pub fn parse (&mut self) -> Vec<SpannedItem<'a>> {	
-
-	let items = vec![];
-	
+	let mut items = vec![];	
 	loop {
-
 	    let tok = self.get();
 	    if let Token::EOF = tok {
 		break
 	    }
-
-	    self.parse_item ();
 	    
+	    let item = self.parse_item ();
+	    items.push (item);
 	}
 	
 	items
@@ -102,19 +98,31 @@ impl<'a> Parser<'a> {
     fn parse_item (&mut self) -> SpannedItem<'a> {
 	let tok = self.get();
 	match tok {
-	    &Token::Func => {
+	    Token::Func => {
 		self.parse_function ()
 	    }
 	    _   => {
-		todo!("unexpected top-level item")
+		todo!("unexpected top-level item: {} {}", self.get(), self.errors.len())
 	    }
 	}
     }
 
-    fn parse_function (&mut self) -> SpannedItem<'a> {
-	self.expect_err(&Token::Func);
+    fn parse_function (&mut self) -> SpannedItem<'a> {	
+	self.expect_err(Token::Func);
+	let start_span = self.get_span ();
 	let name = self.expect_id ();
-	println!("{name}");
-	todo!()
+
+	self.expect_err (Token::OParen);
+	self.expect_err (Token::CParen);
+	
+	self.expect_err (Token::OBrace);
+	self.expect_err (Token::CBrace);
+	
+	let end_span = self.get_span ();
+	Spanned::create (Item::FunctionDefinition (
+	    FnDef {
+		name,
+	    }
+	), start_span.merge(&end_span))
     }
 }

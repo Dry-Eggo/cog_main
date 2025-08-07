@@ -1,8 +1,12 @@
 
+use crate::frontend::token::Spanned;
 
-pub enum Item {
+pub type SpannedItem<'a> = Spanned<Item<'a>>;
 
-    FunctionDefinition ( FnDef ),
+#[derive(Clone, Copy)]
+pub enum Item<'a> {
+
+    FunctionDefinition ( FnDef<'a> ),
     
     /// Place Holder for Parsing Errors
     /// Won't ever reach semantics because syntax error will halt compilation
@@ -12,9 +16,9 @@ pub enum Item {
 
 
 /// Function Definition
-pub struct FnDef {
+#[derive(Clone, Copy)]
+pub struct FnDef<'a> {
     // points to its name in the source.
     // source lives longer than the compilation
-    // so i think it's ok to use 'static
-    name: &'static str,
+    pub name: &'a str,
 }
