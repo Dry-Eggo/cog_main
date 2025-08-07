@@ -6,7 +6,7 @@ use crate::utils::map::Hashable;
 
 use std::ptr;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
 pub struct CogString {
     pub data: *mut u8,
     pub len:  usize
@@ -17,6 +17,15 @@ impl Hashable for CogString {
 	unsafe {
 	    let string_ver = cogstr_to_str(*self);
 	    djb2_hash(string_ver) as usize
+	}
+    }
+}
+
+impl std::fmt::Debug for CogString {
+    fn fmt (&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+	unsafe {
+	    write!(f, "{}", cogstr_to_str(*self));
+	    Ok(())
 	}
     }
 }

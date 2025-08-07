@@ -16,7 +16,7 @@ use crate::frontend::token::  {Span};
 use crate::frontend::objects::*;
 use crate::frontend::error::*;
 
-
+#[derive(Debug)]
 struct Context {
     parent: Option<*mut Context>,
     env:    *mut CogMap<CogString, *mut SymbolInfo>
@@ -60,7 +60,8 @@ unsafe fn context_get_mut (ctx: *mut Context, name: CogString) -> Option<*mut Sy
     }
     None
 }
-    
+
+#[derive(Debug)]
 pub struct Semantics {
     root: RootNode,
 
@@ -78,7 +79,7 @@ pub unsafe fn semantics_new (root: RootNode, arena: *mut Arena) -> *mut Semantic
 
     dref!(sema).root_ctx    = context_new(None, arena);
     dref!(sema).current_ctx = dref!(sema).root_ctx;
-    
+    dref!(sema).irmod       = hir_module_new(arena);
     dref!(sema).arena = arena;    
     sema
 }
@@ -136,7 +137,6 @@ unsafe fn register_function (sema: *mut Semantics, func: *mut FunctionDef, span:
 unsafe fn analyze_function (sema: *mut Semantics, func: *mut FunctionDef) {
     let function_def = &mut *func;
     let arena        = dref!(sema).arena;
-    
     match context_get(dref!(sema).root_ctx, function_def.name) {
 	Some (syminfo) => {
 	    match *syminfo {
