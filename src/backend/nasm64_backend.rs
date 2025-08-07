@@ -25,6 +25,7 @@ impl<'a> NasmContext<'a> {
 	let mut buffer = String::new();
 	if self.externals.len() != 0 {
 	    buffer += &self.externals;
+	    buffer += "\n";
 	}
 	if self.functions.len() != 0 {
 	    buffer += "section .text:\n";
@@ -32,7 +33,11 @@ impl<'a> NasmContext<'a> {
 	}
 	if self.data_section.len() != 0 {
 	    buffer += &self.data_section;
+
 	}
+	buffer += &format!(
+	    "\nsection .note.GNU-stack\n"
+	);
 	buffer
     }
     
@@ -52,18 +57,28 @@ impl<'a> NasmContext<'a> {
 	    LirLabelKind::Function => {
 		self.emit_function (label);
 	    }
+	    LirLabelKind::GlobalLabel => {
+		self.emit_global (label);
+	    }
 	    _ => todo!()
 	}
     }
 
+    fn emit_global (&mut self, label: &LirLabel) {
+	if let LirLabelValue:: GlobalLabel (name) = label.value {
+	    self.externals += &format!("\nglobal {}", name);
+	}
+    }
+    
     fn emit_function (&mut self, label: &LirLabel) {
 	match label.value {
 	    LirLabelValue::Function (ref lfn) => {
 		self.functions += &format!("\n{}:", label.name);
-		if lfn.returned {
-		    self.functions += &format!("\n\tleave");
-		    self.functions += &format!("\n\tret");
-		}
+		self.functions += &format!("\n\tpush rbp");
+		self.functions += &format!("\n\tmov rbp, rsp");
+
+		self.functions += &format!("\n\tleave");
+		self.functions += &format!("\n\tret");
 	    }
 	    _ => unreachable!()
 	}

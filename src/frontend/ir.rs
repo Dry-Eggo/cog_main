@@ -60,6 +60,12 @@ impl<'a> LirModule<'a> {
 		});
 	    }
 	    LirLabelKind::GlobalLabel => {
+		self.labels.push(LirLabel {
+		    kind,
+		    name,
+		    value: LirLabelValue::GlobalLabel (name),
+		    insts: None,
+		});		
 	    }
 	    _ => todo!()
 	}
@@ -79,11 +85,6 @@ pub struct LirLabel<'a> {
 }
 
 impl<'a> LirLabel<'a> {
-    pub fn leave (&mut self) {
-	if let LirLabelValue:: Function (ref mut lfn) = self.value {
-	    lfn.returned = true;
-	}
-    }
 }
 
 pub enum LirLabelKind {
@@ -100,14 +101,12 @@ pub enum LirLabelValue<'a> {
 
 pub struct LirFunction {
     pub is_external: bool,
-    pub returned: bool,
 }
 
 impl LirFunction {
     pub fn new () -> Self {
 	Self {
 	    is_external: false,
-	    returned: false
 	}
     }
 

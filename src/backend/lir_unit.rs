@@ -37,11 +37,11 @@ impl<'a> LirContext<'a> {
     }
 
     fn lower_function (&mut self, func: &HirFunction<'a>) {
-	let mut function_label = self.lirmod.get_label(func.name, LirLabelKind::Function);
+	{
+	    let mut function_label = self.lirmod.get_label(func.name, LirLabelKind::Function);
+	}
 	if func.is_external {
 	    self.lirmod.get_label(func.name, LirLabelKind::GlobalLabel);
 	}
-	
-	function_label.leave();
     }
 }

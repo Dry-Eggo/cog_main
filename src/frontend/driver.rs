@@ -75,6 +75,8 @@ impl Driver {
 	    .arg("a.s")
 	    .arg("-o")
 	    .arg("a.o")
+	    .arg("-g")
+	    .arg("-F dwarf")
 	    .status();
 	let linker_cmd = std::process::Command::new ("gcc")
 	    .arg("a.o")
