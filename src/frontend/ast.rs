@@ -1,34 +1,20 @@
-#![allow(unused)]
-#![allow(unsafe_op_in_unsafe_fn)]
 
-use crate::frontend::arena::*;
-use crate::frontend::token::*;
-use crate::dref;
-use crate::utils::string::*;
-use crate::utils::array::*;
-
-pub type SpannedStmt = Spanned<Stmt>;
-pub type SpannedItem = Spanned<Item>;
-pub type SpannedExpr = Spanned<Expr>;
 
 pub enum Item {
-    FunctionDef(FunctionDef),
-    TypeDef,
+
+    FunctionDefinition ( FnDef ),
+    
+    /// Place Holder for Parsing Errors
+    /// Won't ever reach semantics because syntax error will halt compilation
+    /// before semantics
+    Invalid,
 }
 
-pub enum Stmt {
-    Empty,
-    Expr (SpannedExpr),
-    CompoundStmt(*mut CogArray<SpannedStmt>)
-}
 
-pub enum Expr {
-    Integer(i64),
-    String (CogString),
-    Identifier (CogString),
-}
-
-pub struct FunctionDef {
-    pub name: CogString,
-    pub body: Option<SpannedStmt>,
+/// Function Definition
+pub struct FnDef {
+    // points to its name in the source.
+    // source lives longer than the compilation
+    // so i think it's ok to use 'static
+    name: &'static str,
 }

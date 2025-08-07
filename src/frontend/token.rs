@@ -1,62 +1,52 @@
-#![allow(unused)]
 
-use crate::utils::string::*;
+
+pub enum Token<'a> {
+    Func,
+    Var,
+    Let,
+
+    Identifier (&'a str),
+    Integer,
+
+
+    Eq,
+    OBrace,
+    CBrace,
+    OParen,
+    CParena,
+
+    EOF
+}
 
 #[derive(Debug, Copy, Clone)]
 pub struct Span {
-    pub filename: CogString,
-    pub line:     usize,
-    pub cols:     usize,
-    pub cole:     usize,
+    /* filename: &'a str, */
+    line: usize,
+    col:  usize,
+    cole: usize
 }
 
-impl Span {
-    pub fn display(&self) -> String {
-	unsafe { format!("{}:{}:{}", cogstr_to_str(self.filename), self.line, self.cols) }
-    }
-
-    pub fn merge(&self, other: Self) -> Self {
-	Self {
-	    filename: self.filename,
-	    line:     self.line,
-	    cols:     self.cols,
-	    cole:     self.cole
-	}
-    }
-}
-
-#[derive(Debug, Copy, Clone)]
 pub struct Spanned<T> {
     pub item: T,
     pub span: Span,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub enum Token {
-    Identifier(CogString),
-    Number    (CogString),
+impl<T> Spanned<T> {
+    pub fn wrap (item: T, line: usize, col: usize, cole: usize) -> Self {
+	Self {
+	    item,
+	    span: Span {
+		line,
+		col,
+		cole
+	    }
+	}
+    }
 
-    Func, Let,
-
-    Semi, OBrace, CBrace, OParen, CParen, Comma,
-
-    Eof
-}
-
-pub fn span_new(filename: CogString, line: usize, cols: usize, cole: usize) -> Span {
-    Span {
-	filename,
-	line,
-	cols,
-	cole,
+    pub fn create (item: T, span: Span) -> Self {
+	Self {
+	    item,
+	    span
+	}
     }
 }
-
-pub fn span_wrap<T>(span: Span, item: T) -> Spanned<T> {
-    Spanned {
-	item,
-	span
-    }
-}
-
-

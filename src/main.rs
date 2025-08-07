@@ -1,21 +1,17 @@
-#![allow(unused)]
+use clap::{Parser, /*Subcommand */ };
+
 mod frontend;
-mod utils;
-mod backend;
 
-use frontend::{driver::*};
-use clap::{Parser, Subcommand};
+use crate::frontend::driver::Driver;
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 #[command(author = "Dry-Eggo", version = "0.0.1", about = "The Cog Compiler", long_about = None)]
 struct Args {    
     #[arg(name  = "path to file")]
     input_file: String,
 }
 
-fn main() {
-    
+fn main() {   
     let mut compiler_options = Args::parse();
-
-    driver_run(compiler_options);
+    Driver::new(compiler_options).run_compilation();
 }

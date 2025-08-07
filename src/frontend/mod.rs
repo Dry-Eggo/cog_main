@@ -1,10 +1,5 @@
-pub mod arena;
+pub mod lexer;
 pub mod driver;
 pub mod token;
-pub mod lexer;
 pub mod parser;
-pub mod semantics;
-pub mod objects;
 pub mod ast;
-pub mod ir;
-pub mod error;
