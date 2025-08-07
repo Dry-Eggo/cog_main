@@ -31,7 +31,7 @@ pub struct Semantics <'a> {
     root:    Vec<SpannedItem<'a>>,
 
     context_stack: Vec<Context<'a>>,
-    irmod:         HirModule<'a>,
+    pub irmod:         HirModule<'a>,
 }
 
 impl<'a> Semantics<'a> {
@@ -54,14 +54,13 @@ impl<'a> Semantics<'a> {
 	self.context_stack.pop();
     }
     
-    pub fn check (driver: &Driver, ast: Vec<SpannedItem<'a>>) -> Option<()> {
+    pub fn check (driver: &'a Driver, ast: Vec<SpannedItem<'a>>) -> Option<Semantics<'a>> {
 	let mut sema = Semantics::new(driver, ast);
 	
 	sema.run_first_pass();
 	sema.run_second_pass();
 
-	println!("IRmod items: {:?}", sema.irmod.items.last_mut());
-	None
+	Some (sema)
     }
 
     pub fn add_function (&mut self, name: &'a str, span: Span) {
@@ -116,6 +115,7 @@ impl<'a> Semantics<'a> {
 
     fn analyse_function (&mut self, func: FnDef<'a>, _span: Span) {
 	// Future api will allow for modification of this func_inst
-	let mut _func_inst = self.irmod.get_function(func.name).unwrap();
+	let mut func_inst = self.irmod.get_function(func.name).unwrap();
+	func_inst.set_external();
     }
 }

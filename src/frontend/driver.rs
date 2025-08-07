@@ -3,7 +3,9 @@ use std::io::Read;
 use crate::frontend::lexer::*;
 use crate::frontend::parser::Parser;
 use crate::frontend::semantics::Semantics;
-use crate::Args;
+use crate:: {Args, Backend};
+use crate::backend::nasm64_backend::*;
+use crate::backend::lir_unit::*;
 
 macro_rules! cog_error {
     ($($msg: tt)*) =>  {
@@ -43,8 +45,42 @@ impl Driver {
 	    parser.parse()
 	};
 
-	Semantics::check (self, ast);
+	match Semantics::check (self, ast) {
+	    Some (ref sema) => {
+		if let Some (ref target) = self.args.backend {
+		    match target {
+			Backend::TargetNasm64 => {
+			    let lirmod = LirContext::lower (&sema.irmod);
+			    if let Some (mut nctx) = NasmContext::generate (&lirmod.unwrap()) {
+				let generated_assembly = nctx.build_output();
+				self.emit_file (generated_assembly);
+			    }
+			}
+			_ => todo!("backend not supported yet")
+		    }
+		}
+	    }
+	    None => {
+		todo! ("Report Errors")
+	    }
+	}
 	Ok (())
+    }
+
+    fn emit_file (&self, content: String) {
+	// TODO: actually get output path from cli
+	let _ = std::fs::write("a.s", &content);
+	let nasm_cmd = std::process::Command::new ("nasm")
+	    .arg("-felf64")
+	    .arg("a.s")
+	    .arg("-o")
+	    .arg("a.o")
+	    .status();
+	let linker_cmd = std::process::Command::new ("gcc")
+	    .arg("a.o")
+	    .arg("-o")
+	    .arg("a.out")
+	    .status();
     }
 }
 
