@@ -2,6 +2,7 @@
 use std::io::Read;
 use crate::frontend::lexer::*;
 use crate::frontend::parser::Parser;
+use crate::frontend::semantics::Semantics;
 use crate::Args;
 
 macro_rules! cog_error {
@@ -17,6 +18,7 @@ pub enum CompileError {
     
 }
 
+#[allow(unused)]
 #[derive(Clone, Debug)]
 pub struct Driver {
     pub args:  Args,
@@ -35,11 +37,13 @@ impl Driver {
 
     pub fn run_compilation(&self) -> Result<(), CompileError> {
 	let mut lexer = Lexer::new(self);
-	let mut _ast = {
-	    let tokens = lexer.lex();
+	let tokens = lexer.lex();
+	let ast = {
 	    let mut parser = Parser::new(self, &tokens);
 	    parser.parse()
 	};
+
+	Semantics::check (self, ast);
 	Ok (())
     }
 }
@@ -48,7 +52,7 @@ impl Driver {
 pub fn open_file_or_fail (path: &str) -> String {
     let mut content = String::new();
     if let Ok (mut file) = std::fs::File::open(&path) {
-	file.read_to_string(&mut content);
+	let _ = file.read_to_string(&mut content);
 	return content
     }
     cog_error!("Unable to open file '{}'", path)

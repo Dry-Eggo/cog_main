@@ -1,4 +1,4 @@
-
+#![allow(unused)]
 
 use crate::frontend::token::Span;
 

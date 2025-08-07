@@ -12,6 +12,6 @@ struct Args {
 }
 
 fn main() {   
-    let mut compiler_options = Args::parse();
-    Driver::new(compiler_options).run_compilation();
+    let compiler_options = Args::parse();
+    let _ = Driver::new(compiler_options).run_compilation();
 }

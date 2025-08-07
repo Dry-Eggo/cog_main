@@ -2,4 +2,8 @@ pub mod lexer;
 pub mod driver;
 pub mod token;
 pub mod parser;
+pub mod semantics;
+pub mod error;
 pub mod ast;
+pub mod object;
+pub mod ir;

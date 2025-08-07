@@ -1,14 +1,10 @@
 
-use std::str::Chars;
-
 use crate::frontend::driver::Driver;
 use crate::frontend::token:: {Token, Spanned};
 
 #[derive(Clone, Debug)]
 pub struct Lexer<'a> {
     driver: &'a Driver,
-    chars:  Chars<'a>,
-    max:    usize,
     cursor: usize,
     line:   usize,
     col:    usize
@@ -18,8 +14,6 @@ impl<'a> Lexer<'a> {
     pub fn new (driver: &'a Driver) -> Self {
 	Self {
 	    driver,
-	    chars: driver.source.chars(),
-	    max:   driver.source.len(),
 	    cursor: 0,	    
 	    line: 1,
 	    col: 1,
@@ -56,14 +50,13 @@ impl<'a> Lexer<'a> {
 		break;
 	    }
 	}
-	let slice = &self.driver.source[sc..self.col];
-	
+	let slice = &self.driver.source[sc..self.col-1];
 	match slice {
-	    "fn"   => Spanned::wrap(Token::Func, sl, sc, self.col),
-	    "let"  => Spanned::wrap(Token::Let,  sl, sc, self.col),
-	    "var"  => Spanned::wrap(Token::Var,  sl, sc, self.col),
+	    "fn"   => Spanned::wrap(Token::Func, sl, sc, self.col-1),
+	    "let"  => Spanned::wrap(Token::Let,  sl, sc, self.col-1),
+	    "var"  => Spanned::wrap(Token::Var,  sl, sc, self.col-1),
 
-	    _      => Spanned::wrap(Token::Identifier(slice), sl, sc, self.col),
+	    _      => Spanned::wrap(Token::Identifier(slice), sl, sc, self.col-1),
 	}
     }
     
@@ -98,7 +91,7 @@ impl<'a> Lexer<'a> {
 		}
 		')' => {
 		    self.advance();
-		    tokens.push (Spanned::wrap (Token::OParen, sl, sc, self.col));
+		    tokens.push (Spanned::wrap (Token::CParen, sl, sc, self.col));
 		}
 		_ => {
 		    eprintln!("Unexpected character found in file: {}:{}: '{}'", sl, sc, ch);

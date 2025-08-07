@@ -1,29 +1,28 @@
-
+#![allow(unused)]
 use std::collections::HashMap;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 use crate::frontend::ast::*;
 use crate::frontend::driver::*;
 use crate::frontend::object::*;
 use crate::frontend::token::*;
-
-
-type ContextPtr<'a> = Rc<RefCell<Context<'a>>>;
+use crate::frontend::ir::*;
 
 struct Context<'a> {
     ftable:    FunctionTable<'a>,
     functions: HashMap<String, usize>,
-    parent:    Option<ContextPtr<'a>>
 }
 
 impl<'a> Context<'a> {
-    pub fn new (parent: Option<ContextPtr<'a>>) -> ContextPtr<'a> {
-	Rc::new ( RefCell::new (Self {
-	    parent,
+    pub fn new () -> Context<'a> {
+	Self {
 	    ftable: FunctionTable::new(),
 	    functions: HashMap::new()
-	}))
+	}
+    }
+
+    pub fn add_function (&mut self, name: &'a str, span: Span) {
+	let id = self.ftable.make_function (name, span);
+	self.functions.insert(name.to_owned(), id);
     }
 }
 
@@ -31,21 +30,28 @@ pub struct Semantics <'a> {
     driver: &'a Driver,
     root:    Vec<SpannedItem<'a>>,
 
-    context_stack: Vec<ContextPtr<'a>>,
+    context_stack: Vec<Context<'a>>,
+    irmod:         HirModule<'a>,
 }
 
 impl<'a> Semantics<'a> {
     fn new (driver: &'a Driver, ast: Vec<SpannedItem<'a>>) -> Self {
-	Self {
+	let mut it = Self {
 	    driver,
 	    root: ast,
-	    context_stack: vec![Context::new(None); 1] /* Root Context */
-	}
+	    context_stack: vec![],
+	    irmod: HirModule::new(),
+	};
+	it.context_stack.push (Context::new()); /* Parent Context */
+	it
     }
 
     fn enter_context (&mut self) {
-	let current_ctx = self.context_stack.last ().unwrap();
-	self.context_stack.push(Context::new(Some(current_ctx)));
+	self.context_stack.push(Context::new());
+    }
+
+    fn leave_context (&mut self) {
+	self.context_stack.pop();
     }
     
     pub fn check (driver: &Driver, ast: Vec<SpannedItem<'a>>) -> Option<()> {
@@ -53,12 +59,23 @@ impl<'a> Semantics<'a> {
 	
 	sema.run_first_pass();
 	sema.run_second_pass();
-	
+
+	println!("IRmod items: {:?}", sema.irmod.items.last_mut());
 	None
     }
 
+    pub fn add_function (&mut self, name: &'a str, span: Span) {
+	// All functions are stored on the Parent Context which is essentially the first Context
+	let context = self.context_stack.first_mut ().unwrap();
+	context.add_function (name, span);
+    }
+    
     fn run_first_pass (&mut self) -> Option<()> {
-	// TODO: register function and generate C Header file
+	for n in 0..self.root.len() {
+	    let item = self.root[n];
+	    
+	    self.register_item (item);
+	}
 	None
     }
 
@@ -71,7 +88,22 @@ impl<'a> Semantics<'a> {
 	None
     }
 
-    fn analyse_item (&mut self, item: SpannedItem) {
+    fn register_item (&mut self, item: SpannedItem<'a>) {
+	match item.item {
+	    Item:: FunctionDefinition (fndef) => {
+		self.register_function (fndef, item.span);
+	    }
+	    _ => {
+		todo!()
+	    }
+	}	
+    }
+    
+    fn register_function (&mut self, func: FnDef<'a>, span: Span) {
+	self.add_function (func.name, span);
+    }
+    
+    fn analyse_item (&mut self, item: SpannedItem<'a>) {
 	match item.item {
 	    Item:: FunctionDefinition (fndef) => {
 		self.analyse_function (fndef, item.span);
@@ -82,7 +114,8 @@ impl<'a> Semantics<'a> {
 	}
     }
 
-    fn analyse_function (&mut self, func: FnDef, span: Span) {
-	
+    fn analyse_function (&mut self, func: FnDef<'a>, _span: Span) {
+	// Future api will allow for modification of this func_inst
+	let mut _func_inst = self.irmod.get_function(func.name).unwrap();
     }
 }

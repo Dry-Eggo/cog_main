@@ -1,7 +1,10 @@
+#![allow(unused)]
+use crate::frontend::token::Span;
 
 #[derive(Debug, Clone)]
 pub struct FunctionInfo<'a> {
     name: &'a str,
+    span: Span,
 }
 
 #[derive(Debug, Clone)]
@@ -16,10 +19,11 @@ impl<'a> FunctionTable<'a> {
 	}
     }
 
-    pub fn make_function (&mut self, name: &'a str) -> usize {
+    pub fn make_function (&mut self, name: &'a str, span: Span) -> usize {
 	let id = self.entries.len();
 	self.entries.push (FunctionInfo{
-	    name
+	    name,
+	    span
 	});
 	id
     }

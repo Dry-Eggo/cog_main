@@ -1,4 +1,4 @@
-
+#![allow(unused)]
 use crate::frontend::token::Spanned;
 
 pub type SpannedItem<'a> = Spanned<Item<'a>>;

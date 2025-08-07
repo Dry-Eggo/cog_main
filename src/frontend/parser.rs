@@ -1,9 +1,10 @@
-
+#![allow(unused)]
 
 use crate::frontend::driver::Driver;
 use crate::frontend::token:: {Token, Spanned, Span};
 use crate::frontend::ast:: {SpannedItem, Item, FnDef};
 use crate::frontend::error::SyntaxError;
+
 
 pub struct Parser<'a> {
     driver: &'a Driver,
