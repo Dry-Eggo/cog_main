@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use crate::driver::SourceFile;
 
 #[allow(unused)]
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -36,21 +37,32 @@ impl<'a> Display for Token<'a> {
     }
 }
 
+impl Display for Span {
+    fn fmt (&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+	write!(f, "{}:{}-{}", self.line, self.col, self.cole)
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 pub struct Span {
-    /* filename: &'a str, */
-    line: usize,
-    col:  usize,
-    cole: usize
+    pub file_id: SourceFile,
+    pub line: usize,
+    pub col:  usize,
+    pub cole: usize
 }
 
 impl Span {
     pub fn merge (&self, other: &Self) -> Self {
 	Self {
+	    file_id: self.file_id,
 	    line: self.line,
 	    col:  self.col,
 	    cole: other.cole
 	}
+    }
+
+    pub fn underline (&self, line: &str) -> String {
+	String::new()
     }
 }
 
@@ -61,10 +73,11 @@ pub struct Spanned<T> {
 }
 
 impl<T> Spanned<T> {
-    pub fn wrap (item: T, line: usize, col: usize, cole: usize) -> Self {
+    pub fn wrap (item: T, line: usize, col: usize, cole: usize, id: SourceFile) -> Self {
 	Self {
 	    item,
 	    span: Span {
+		file_id: id,
 		line,
 		col,
 		cole
