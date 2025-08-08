@@ -3,7 +3,8 @@
 use crate::frontend::token:: {Token, Spanned, Span};
 use crate::frontend::ast:: {
     SpannedItem, SpannedStmt, SpannedExpr,
-    Item, FnDef};
+    Item, Stmt, Expr,
+    FnDef, RawType, MutVarDecl};
 use crate::frontend::error::*;
 
 
@@ -120,33 +121,95 @@ impl<'source> Parser<'source> {
     }
 
     fn parse_function (&mut self) -> SpannedItem<'source> {	
-	self.expect_err(Token::Func);
 	let start_span = self.get_span ();
+	self.expect_err(Token::Func);
+	
+	let name_span = self.get_span ();
 	let name = self.expect_id ();
 
 	self.expect_err (Token::OParen);
 	self.expect_err (Token::CParen);
 	
 	self.expect_err (Token::OBrace);
-	let body = self.parse_stmt ();	
+	let body =  Some(self.parse_body ());
+	println!("{:?}", body);
 	self.expect_err (Token::CBrace);
 	
 	let end_span = self.get_span ();
 	
 	Spanned::create (Item::FunctionDefinition (FnDef {
 	    name,
-	    name_span: start_span,
+	    name_span,
 	    body,
 	}), start_span.merge(&end_span))
     }
 
+    fn parse_body (&mut self) -> SpannedStmt<'source> {
+	let start_span = self.get_span ();
+	let mut statements = vec![];
+
+	while !self.matches (Token::CBrace) {
+	    statements.push(self.parse_stmt ())
+	}
+	
+	let end_span = self.get_span ();
+	Spanned::create (Stmt::CompoundStmt(statements), start_span.merge(&end_span))
+    }
+    
     fn parse_stmt (&mut self) -> Option<SpannedStmt<'source>> {
 	match self.get () {
 	    Token::SemiColon => return None,
+	    Token::Var       => self.parse_var_decl (),
 	    _ => {
 		todo!()
 	    }
 	}
+    }
+
+    fn parse_var_decl (&mut self) -> Option<SpannedStmt<'source>> {
+	let start_span = self.get_span ();
+	self.expect_err(Token::Var);
+	let name_span  = self.get_span ();
+	let identifier = self.expect_id ();
+
+	if !self.expect (Token::Colon) {
+	    todo!("parse_var_decl: no type is given");
+	}
+	let ty = self.parse_type ();
+	if !self.matches (Token::SemiColon) {
+	    todo!()
+	}
+	
+	self.expect_err (Token::SemiColon);
+	let end_span  = self.get_span ();
+	Some (Spanned::create (Stmt::MutVarDecl(MutVarDecl{
+	    name: identifier,
+	    name_span,
+	    init: None,
+	    ty,
+	}), start_span.merge(&end_span)))
+    }
+
+    fn parse_type (&mut self) -> Option<Spanned<RawType<'source>>> {
+	let start_span = self.get_span ();
+	match self.get() {
+	    Token::PrimitiveType ( repr )  => {
+		self.advance();
+		let ty = match repr {
+		    "i8"   => Spanned::create (RawType::SignedInteger(8), start_span),
+		    "i16"  => Spanned::create (RawType::SignedInteger(16), start_span),
+		    "i32"  => Spanned::create (RawType::SignedInteger(32), start_span),
+		    "i64"  => Spanned::create (RawType::SignedInteger(64), start_span),
+		    "cstr" => Spanned::create (RawType::CString, start_span),
+		    _ => todo!()
+		};
+		return Some (ty)
+	    }
+	    _ => {
+		todo!();
+	    }
+	}
+	None
     }
 }
 

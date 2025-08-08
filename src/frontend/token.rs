@@ -6,9 +6,10 @@ use crate::driver::SourceFile;
 pub enum Token<'a> {
     Func,
     Var,
-    Let,
+    Let, Mut,
 
     Identifier (&'a str),
+    PrimitiveType (&'a str),
     Integer,
 
 
@@ -28,7 +29,8 @@ impl<'a> Display for Token<'a> {
 	match self {
 	    Token::Func => write! (f, "fn"),
 	    Token::Var  => write! (f, "var"),
-	    Token::Identifier ( ident ) => write!(f, "Ident ( {} )", ident),
+	    Token::Identifier ( ident ) => write!(f, "identifier {}", ident),
+	    Token::PrimitiveType ( ty_str ) => write!(f, "primitive-type {}", ty_str),
 	    Token::OBrace => write! (f, "{{"),
 	    Token::CBrace => write! (f, "}}"),
 	    Token::OParen => write! (f, "("),	    
@@ -78,7 +80,7 @@ impl Span {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Spanned<T> {
     pub item: T,
     pub span: Span,

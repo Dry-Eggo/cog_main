@@ -63,7 +63,20 @@ impl<'source> Lexer<'source> {
 	    "fn"   => Spanned::wrap(Token::Func, sl, sc, self.col-1, self.source_id),
 	    "let"  => Spanned::wrap(Token::Let,  sl, sc, self.col-1, self.source_id),
 	    "var"  => Spanned::wrap(Token::Var,  sl, sc, self.col-1, self.source_id),
+	    "mut"  => Spanned::wrap(Token::Var,  sl, sc, self.col-1, self.source_id),
 
+	    "i8"  |
+	    "i16" |
+	    "i32" |
+	    "i64" |
+	    "string" |
+	    "cstr"   |
+	    "bool"   |
+	    "int"    |
+	    "u8"  |
+	    "u16" |
+	    "u32" |
+	    "u64"  => Spanned::wrap(Token::PrimitiveType(slice),  sl, sc, self.col-1, self.source_id),
 	    _      => Spanned::wrap(Token::Identifier(slice), sl, sc, self.col-1, self.source_id),
 	}
     }

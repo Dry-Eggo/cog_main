@@ -68,24 +68,26 @@ impl<'source> Semantics<'source> {
     }
     
     fn run_first_pass (&mut self) -> Option<()> {
-	for item in &self.root {	    
+	let items = std::mem::take(&mut self.root);
+	for item in &items {
 	    self.register_item (item);
 	}
+	self.root = items;
 	None
     }
 
     fn run_second_pass (&mut self) -> Option<()> {
-	for n in 0..self.root.len() {
-	    let item = self.root[n];
-	    
+	let items = std::mem::take(&mut self.root);
+	for item in &items {
 	    self.analyse_item (item);
 	}
+	self.root = items;
 	None
     }
 
     fn register_item (&mut self, item: &SpannedItem<'source>) {
 	match item.item {
-	    Item:: FunctionDefinition (fndef) => {
+	    Item:: FunctionDefinition (ref fndef) => {
 		self.register_function (fndef, item.span);
 	    }
 	    _ => {
@@ -94,13 +96,13 @@ impl<'source> Semantics<'source> {
 	}	
     }
     
-    fn register_function (&mut self, func: FnDef<'source>, span: Span) {
+    fn register_function (&mut self, func: &FnDef<'source>, span: Span) {
 	self.add_function (func.name, span);
     }
     
-    fn analyse_item (&mut self, item: SpannedItem<'source>) {
+    fn analyse_item (&mut self, item: &SpannedItem<'source>) {
 	match item.item {
-	    Item:: FunctionDefinition (fndef) => {
+	    Item:: FunctionDefinition (ref fndef) => {
 		self.analyse_function (fndef, item.span);
 	    }
 	    _ => {
@@ -109,9 +111,8 @@ impl<'source> Semantics<'source> {
 	}
     }
 
-    fn analyse_function (&mut self, func: FnDef<'source>, _span: Span) {
+    fn analyse_function (&mut self, func: &FnDef<'source>, _span: Span) {
 	// Future api will allow for modification of this func_inst
 	let mut func_inst = self.irmod.get_function(func.name).unwrap();
-	func_inst.set_external();
     }
 }
