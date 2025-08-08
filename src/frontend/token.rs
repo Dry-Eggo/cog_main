@@ -17,6 +17,8 @@ pub enum Token<'a> {
     CBrace,
     OParen,
     CParen,
+    Colon,
+    SemiColon,
 
     EOF
 }
@@ -29,8 +31,10 @@ impl<'a> Display for Token<'a> {
 	    Token::Identifier ( ident ) => write!(f, "Ident ( {} )", ident),
 	    Token::OBrace => write! (f, "{{"),
 	    Token::CBrace => write! (f, "}}"),
-	    Token::OParen => write! (f, "("),
+	    Token::OParen => write! (f, "("),	    
 	    Token::CParen => write! (f, ")"),
+	    Token::Colon => write! (f, ":"),
+	    Token::SemiColon => write! (f, ";"),
 	    Token::EOF    => write! (f, "<eof>"),
 	    _ => todo!()
 	}
@@ -61,16 +65,15 @@ impl Span {
 	}
     }
 
-    pub fn underline (&self, line: &str) -> String {	
-
-	if self.col >= self.cole {
+    pub fn underline (&self) -> String {	
+	if self.col > self.cole {
 	    return String::new();
 	}
 
-	let mut result = " ".repeat(self.col);
-	let width  = self.cole - self.col;
+	let mut result = " ".repeat(self.col-1);
+	let width  = if self.col == self.cole { 1 } else { self.cole - self.col };
 	result += "^";
-	result.push_str(&"~".repeat(width - 1));
+	result.push_str(&"~".repeat(width-1));
 	result
     }
 }

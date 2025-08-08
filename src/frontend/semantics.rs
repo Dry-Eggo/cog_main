@@ -68,9 +68,7 @@ impl<'source> Semantics<'source> {
     }
     
     fn run_first_pass (&mut self) -> Option<()> {
-	for n in 0..self.root.len() {
-	    let item = self.root[n];
-	    
+	for item in &self.root {	    
 	    self.register_item (item);
 	}
 	None
@@ -85,7 +83,7 @@ impl<'source> Semantics<'source> {
 	None
     }
 
-    fn register_item (&mut self, item: SpannedItem<'source>) {
+    fn register_item (&mut self, item: &SpannedItem<'source>) {
 	match item.item {
 	    Item:: FunctionDefinition (fndef) => {
 		self.register_function (fndef, item.span);

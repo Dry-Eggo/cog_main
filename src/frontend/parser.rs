@@ -1,7 +1,9 @@
 #![allow(unused)]
 
 use crate::frontend::token:: {Token, Spanned, Span};
-use crate::frontend::ast:: {SpannedItem, Item, FnDef};
+use crate::frontend::ast:: {
+    SpannedItem, SpannedStmt, SpannedExpr,
+    Item, FnDef};
 use crate::frontend::error::*;
 
 
@@ -40,11 +42,7 @@ impl<'source> Parser<'source> {
 	    let span = self.get_span();
 	    let got  = self.get();
 	    self.errors.push(Diag::UnexpectedTokenWithEx(
-		UnexpectedTokenWithExSub {
-		    expected: tok,
-		    got,
-		    span
-		}
+		UnexpectedTokenWithExSub { expected: tok, got, span }
 	    ));
 	    return false
 	}
@@ -67,10 +65,17 @@ impl<'source> Parser<'source> {
     }
 
     fn before (&self) -> Token<'source> {	
-	if self.pos < 0 {
+	if self.pos <= 0 {
 	    return self.tokens.last().unwrap().item
 	}	
 	self.tokens[self.pos - 1].item
+    }
+    
+    fn before_span (&self) -> Span {
+	if self.pos <= 0 {
+	    return self.tokens.last().unwrap().span
+	}
+	self.tokens[self.pos - 1].span	
     }
     
     fn get (&self) -> Token<'source> {	
@@ -95,15 +100,10 @@ impl<'source> Parser<'source> {
 	let mut items = vec![];	
 	loop {
 	    let tok = self.get();
-	    if let Token::EOF = tok {
-		break
-	    }
-	    
+	    if let Token::EOF = tok { break }	    
 	    let item = self.parse_item ();
 	    items.push (item);
-	}
-
-	
+	}	
 	items
     }
 
@@ -128,14 +128,25 @@ impl<'source> Parser<'source> {
 	self.expect_err (Token::CParen);
 	
 	self.expect_err (Token::OBrace);
+	let body = self.parse_stmt ();	
 	self.expect_err (Token::CBrace);
 	
 	let end_span = self.get_span ();
-	Spanned::create (Item::FunctionDefinition (
-	    FnDef {
-		name,
+	
+	Spanned::create (Item::FunctionDefinition (FnDef {
+	    name,
+	    name_span: start_span,
+	    body,
+	}), start_span.merge(&end_span))
+    }
+
+    fn parse_stmt (&mut self) -> Option<SpannedStmt<'source>> {
+	match self.get () {
+	    Token::SemiColon => return None,
+	    _ => {
+		todo!()
 	    }
-	), start_span.merge(&end_span))
+	}
     }
 }
 

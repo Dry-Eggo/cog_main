@@ -1,4 +1,4 @@
-
+#![allow(unused)]
 use crate::frontend::token:: {Token, Spanned, Span};
 use crate::frontend::driver:: {SourceMap, SourceFile};
 use crate::frontend::error::*;
@@ -37,7 +37,7 @@ impl<'source> Lexer<'source> {
 	if let Some( ch ) = self.peek(0) {
 	    if ch == '\n' {
 		self.line += 1;
-		self.col  = 1;
+		self.col = 1;
 	    } else {
 		self.col += 1;		
 	    }
@@ -49,8 +49,8 @@ impl<'source> Lexer<'source> {
 
     pub fn parse_name (&mut self) -> Spanned<Token<'source>> {
 	let sl = self.line;
-	let sc = self.cursor;
-
+	let scr = self.cursor;
+	let sc  = self.col;
 	while let Some ( ch ) = self.peek(0) {
 	    if ch.is_ascii_alphanumeric() || ch == '_' {
 		self.advance();
@@ -58,7 +58,7 @@ impl<'source> Lexer<'source> {
 		break;
 	    }
 	}
-	let slice = &self.source[sc..self.col-1];
+	let slice = &self.source[scr..self.cursor];
 	match slice {
 	    "fn"   => Spanned::wrap(Token::Func, sl, sc, self.col-1, self.source_id),
 	    "let"  => Spanned::wrap(Token::Let,  sl, sc, self.col-1, self.source_id),
@@ -83,8 +83,16 @@ impl<'source> Lexer<'source> {
 	    }
 	    
 	    let sl = self.line;
-	    let sc = self.cursor;	    
+	    let sc = self.col;
 	    match ch {
+		':' => {
+		    self.advance();
+		    tokens.push (Spanned::wrap (Token::Colon, sl, sc, self.col-1, self.source_id));
+		}
+		';' => {
+		    self.advance();
+		    tokens.push (Spanned::wrap (Token::SemiColon, sl, sc, self.col-1, self.source_id));
+		}
 		'{' => {
 		    self.advance();
 		    tokens.push (Spanned::wrap (Token::OBrace, sl, sc, self.col-1, self.source_id));
@@ -102,13 +110,13 @@ impl<'source> Lexer<'source> {
 		    tokens.push (Spanned::wrap (Token::CParen, sl, sc, self.col-1, self.source_id));
 		}
 		_ => {
+		    self.advance();
 		    self.diagnostics.push (Diag::InvalidCharacter (Span {
 			file_id: self.source_id,
 			line:    sl,
 			col:     sc,
-			cole:    self.col,
+			cole:    self.col-1,
 		    }, ch));
-		    self.advance();
 		}		
 	    }
 	}

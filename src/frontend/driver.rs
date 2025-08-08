@@ -60,7 +60,7 @@ impl SourceMap {
     }
 
     pub fn get_filename (&self, id: SourceFile) -> Option<&String> {
-	let key = self.id.iter().find (|(key, id_)| {
+	let key = self.id.iter().find (|(_, id_)| {
 	    **id_ == id
 	});
 	
@@ -81,7 +81,7 @@ pub fn run_compilation(args: Args) -> Result<(), CompileError> {
     };
     
     let ast = {
-	let mut items = parse_tokens(&tokens);
+	let items = parse_tokens(&tokens);
 	let Ok (items) = items else {
 	    report_errors (&smap, items.err().unwrap());
 	    abort_compilation(CompileError::ParsingError)

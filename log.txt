@@ -1,1 +1,0 @@
-IRmod items: Some(Function(HirFunction { name: "main" }))
