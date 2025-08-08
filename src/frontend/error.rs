@@ -84,6 +84,20 @@ pub fn report_errors (smap: &SourceMap, errors: Diagnostics) {
 	    println!(" {:>5} |{}", span.line, line);
 	    println!(" {:>5} |{}", "", span.underline(line));
 	    println!(" hint:  try '{}'", format!("{} {DEFAULT_IDENTIFIER} {}", &line[..span.col-1], &line[span.col..]));
-	}
+	} else if let Diag::UnexpectedTokenWithEx(sub) = err {
+    let source   = smap.get_source_by_id(sub.span.file_id);
+    let filename = match smap.get_filename(sub.span.file_id) {
+        Some(x) => x,
+        _  => "invalid_path",
+    };
+    let line = get_line_from_span(&sub.span, source);
+    println!(
+        "error: {}:{}: unexpected token: expected '{}', got '{}'",
+        filename, sub.span, sub.expected, sub.got
+    );
+    println!(" {:>5} |", "");
+    println!(" {:>5} |{}", sub.span.line, line);
+    println!(" {:>5} |{}", "", sub.span.underline(line));
+}
     }
 }
