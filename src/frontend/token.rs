@@ -61,8 +61,17 @@ impl Span {
 	}
     }
 
-    pub fn underline (&self, line: &str) -> String {
-	String::new()
+    pub fn underline (&self, line: &str) -> String {	
+
+	if self.col >= self.cole {
+	    return String::new();
+	}
+
+	let mut result = " ".repeat(self.col);
+	let width  = self.cole - self.col;
+	result += "^";
+	result.push_str(&"~".repeat(width - 1));
+	result
     }
 }
 

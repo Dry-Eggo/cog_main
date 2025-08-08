@@ -2,7 +2,7 @@
 
 use crate::frontend::token:: {Token, Spanned, Span};
 use crate::frontend::ast:: {SpannedItem, Item, FnDef};
-use crate::frontend::error::SyntaxError;
+use crate::frontend::error::*;
 
 
 pub struct Parser<'source> {
@@ -10,7 +10,7 @@ pub struct Parser<'source> {
     pos:  usize,
     max:  usize,
 
-    errors: Vec<SyntaxError>,
+    errors: Diagnostics<'source>,
 }
 
 impl<'source> Parser<'source> {
@@ -35,11 +35,17 @@ impl<'source> Parser<'source> {
 	true
     }
 
-    fn expect_err (&mut self, tok: Token) -> bool {
+    fn expect_err (&mut self, tok: Token<'source>) -> bool {
 	if !self.matches (tok) {
 	    let span = self.get_span();
 	    let got  = self.get();
-	    self.errors.push(SyntaxError::new (format!("expected '{}' but got '{}' instead", tok, got), span));
+	    self.errors.push(Diag::UnexpectedTokenWithEx(
+		UnexpectedTokenWithExSub {
+		    expected: tok,
+		    got,
+		    span
+		}
+	    ));
 	    return false
 	}
 	self.advance();
@@ -54,10 +60,17 @@ impl<'source> Parser<'source> {
 	    }
 	    _ => {
 		let span = self.get_span ();
-		self.errors.push (SyntaxError::new ("expected an identifier".to_owned(),  span));
+		self.errors.push (Diag::MissingIdentifier(span, self.before()));
 		"error"
 	    }
 	}
+    }
+
+    fn before (&self) -> Token<'source> {	
+	if self.pos < 0 {
+	    return self.tokens.last().unwrap().item
+	}	
+	self.tokens[self.pos - 1].item
     }
     
     fn get (&self) -> Token<'source> {	
@@ -89,6 +102,7 @@ impl<'source> Parser<'source> {
 	    let item = self.parse_item ();
 	    items.push (item);
 	}
+
 	
 	items
     }
@@ -123,4 +137,14 @@ impl<'source> Parser<'source> {
 	    }
 	), start_span.merge(&end_span))
     }
+}
+
+pub fn parse_tokens<'source> (tokens: &'source [Spanned<Token<'source>>]) -> Result<Vec<SpannedItem<'source>>, Diagnostics<'source>> {
+    let mut parser = Parser::new(tokens);
+    let items  = parser.parse();
+
+    if parser.errors.is_empty() {
+	return Ok (items)
+    }
+    Err (parser.errors)
 }

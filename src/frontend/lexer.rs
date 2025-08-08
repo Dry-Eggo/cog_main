@@ -1,21 +1,30 @@
 
-use crate::frontend::token:: {Token, Spanned};
+use crate::frontend::token:: {Token, Spanned, Span};
+use crate::frontend::driver:: {SourceMap, SourceFile};
+use crate::frontend::error::*;
 
 #[derive(Clone, Debug)]
 pub struct Lexer<'source> {
-    source: &'source String,
-    cursor: usize,
-    line:   usize,
-    col:    usize
+    source_map: &'source SourceMap,
+    source_id: SourceFile,
+    source:      &'source String,
+    cursor:      usize,
+    line:        usize,
+    col:         usize,
+    diagnostics: Diagnostics<'source>,
 }
 
 impl<'source> Lexer<'source> {
-    pub fn new (source: &'source String) -> Self {
+    pub fn new (source_id: SourceFile, smap: &'source SourceMap) -> Self {
+	let source = smap.get_source_by_id (source_id);
 	Self {
+	    source_id,
+	    source_map: smap,
 	    source,
 	    cursor: 0,	    
 	    line: 1,
 	    col: 1,
+	    diagnostics: vec![],
 	}
     }
 
@@ -51,11 +60,11 @@ impl<'source> Lexer<'source> {
 	}
 	let slice = &self.source[sc..self.col-1];
 	match slice {
-	    "fn"   => Spanned::wrap(Token::Func, sl, sc, self.col-1),
-	    "let"  => Spanned::wrap(Token::Let,  sl, sc, self.col-1),
-	    "var"  => Spanned::wrap(Token::Var,  sl, sc, self.col-1),
+	    "fn"   => Spanned::wrap(Token::Func, sl, sc, self.col-1, self.source_id),
+	    "let"  => Spanned::wrap(Token::Let,  sl, sc, self.col-1, self.source_id),
+	    "var"  => Spanned::wrap(Token::Var,  sl, sc, self.col-1, self.source_id),
 
-	    _      => Spanned::wrap(Token::Identifier(slice), sl, sc, self.col-1),
+	    _      => Spanned::wrap(Token::Identifier(slice), sl, sc, self.col-1, self.source_id),
 	}
     }
     
@@ -78,28 +87,43 @@ impl<'source> Lexer<'source> {
 	    match ch {
 		'{' => {
 		    self.advance();
-		    tokens.push (Spanned::wrap (Token::OBrace, sl, sc, self.col));
+		    tokens.push (Spanned::wrap (Token::OBrace, sl, sc, self.col-1, self.source_id));
 		}
 		'}' => {
 		    self.advance();
-		    tokens.push (Spanned::wrap (Token::CBrace, sl, sc, self.col));
+		    tokens.push (Spanned::wrap (Token::CBrace, sl, sc, self.col-1, self.source_id));
 		}
 		'(' => {
 		    self.advance();
-		    tokens.push (Spanned::wrap (Token::OParen, sl, sc, self.col));
+		    tokens.push (Spanned::wrap (Token::OParen, sl, sc, self.col-1, self.source_id));
 		}
 		')' => {
 		    self.advance();
-		    tokens.push (Spanned::wrap (Token::CParen, sl, sc, self.col));
+		    tokens.push (Spanned::wrap (Token::CParen, sl, sc, self.col-1, self.source_id));
 		}
 		_ => {
-		    eprintln!("Unexpected character found in file: {}:{}: '{}'", sl, sc, ch);
+		    self.diagnostics.push (Diag::InvalidCharacter (Span {
+			file_id: self.source_id,
+			line:    sl,
+			col:     sc,
+			cole:    self.col,
+		    }, ch));
 		    self.advance();
 		}		
 	    }
 	}
 	
-	tokens.push (Spanned::wrap (Token::EOF, 0, 0, 0));
+	tokens.push (Spanned::wrap (Token::EOF, 0, 0, 0, self.source_id));
 	tokens
     }
+}
+
+pub fn lex_source<'source> (source: SourceFile, smap: &'source SourceMap) -> Result<Vec<Spanned<Token<'source>>>, Vec<Diag<'source>>> {
+    let mut lexer = Lexer::new(source, smap);
+    let tokens = lexer.lex();
+
+    if lexer.diagnostics.is_empty() {
+	return Ok (tokens)
+    }
+    Err (lexer.diagnostics)
 }
