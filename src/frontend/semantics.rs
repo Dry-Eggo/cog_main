@@ -26,18 +26,16 @@ impl<'a> Context<'a> {
     }
 }
 
-pub struct Semantics <'a> {
-    driver: &'a Driver,
-    root:    Vec<SpannedItem<'a>>,
+pub struct Semantics <'source> {
+    root:    Vec<SpannedItem<'source>>,
 
-    context_stack: Vec<Context<'a>>,
-    pub irmod:         HirModule<'a>,
+    context_stack: Vec<Context<'source>>,
+    pub irmod:         HirModule<'source>,
 }
 
-impl<'a> Semantics<'a> {
-    fn new (driver: &'a Driver, ast: Vec<SpannedItem<'a>>) -> Self {
+impl<'source> Semantics<'source> {
+    fn new (ast: Vec<SpannedItem<'source>>) -> Self {
 	let mut it = Self {
-	    driver,
 	    root: ast,
 	    context_stack: vec![],
 	    irmod: HirModule::new(),
@@ -54,8 +52,8 @@ impl<'a> Semantics<'a> {
 	self.context_stack.pop();
     }
     
-    pub fn check (driver: &'a Driver, ast: Vec<SpannedItem<'a>>) -> Option<Semantics<'a>> {
-	let mut sema = Semantics::new(driver, ast);
+    pub fn check (ast: Vec<SpannedItem<'source>>) -> Option<Semantics<'source>> {
+	let mut sema = Semantics::new(ast);
 	
 	sema.run_first_pass();
 	sema.run_second_pass();
@@ -63,7 +61,7 @@ impl<'a> Semantics<'a> {
 	Some (sema)
     }
 
-    pub fn add_function (&mut self, name: &'a str, span: Span) {
+    pub fn add_function (&mut self, name: &'source str, span: Span) {
 	// All functions are stored on the Parent Context which is essentially the first Context
 	let context = self.context_stack.first_mut ().unwrap();
 	context.add_function (name, span);
@@ -87,7 +85,7 @@ impl<'a> Semantics<'a> {
 	None
     }
 
-    fn register_item (&mut self, item: SpannedItem<'a>) {
+    fn register_item (&mut self, item: SpannedItem<'source>) {
 	match item.item {
 	    Item:: FunctionDefinition (fndef) => {
 		self.register_function (fndef, item.span);
@@ -98,11 +96,11 @@ impl<'a> Semantics<'a> {
 	}	
     }
     
-    fn register_function (&mut self, func: FnDef<'a>, span: Span) {
+    fn register_function (&mut self, func: FnDef<'source>, span: Span) {
 	self.add_function (func.name, span);
     }
     
-    fn analyse_item (&mut self, item: SpannedItem<'a>) {
+    fn analyse_item (&mut self, item: SpannedItem<'source>) {
 	match item.item {
 	    Item:: FunctionDefinition (fndef) => {
 		self.analyse_function (fndef, item.span);
@@ -113,7 +111,7 @@ impl<'a> Semantics<'a> {
 	}
     }
 
-    fn analyse_function (&mut self, func: FnDef<'a>, _span: Span) {
+    fn analyse_function (&mut self, func: FnDef<'source>, _span: Span) {
 	// Future api will allow for modification of this func_inst
 	let mut func_inst = self.irmod.get_function(func.name).unwrap();
 	func_inst.set_external();

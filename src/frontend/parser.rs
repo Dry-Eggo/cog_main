@@ -1,24 +1,21 @@
 #![allow(unused)]
 
-use crate::frontend::driver::Driver;
 use crate::frontend::token:: {Token, Spanned, Span};
 use crate::frontend::ast:: {SpannedItem, Item, FnDef};
 use crate::frontend::error::SyntaxError;
 
 
-pub struct Parser<'a> {
-    driver: &'a Driver,
-    tokens: &'a [Spanned<Token<'a>>],
+pub struct Parser<'source> {
+    tokens: &'source [Spanned<Token<'source>>],
     pos:  usize,
     max:  usize,
 
     errors: Vec<SyntaxError>,
 }
 
-impl<'a> Parser<'a> {
-    pub fn new (driver: &'a Driver, tokens: &'a [Spanned<Token>]) -> Self  {
+impl<'source> Parser<'source> {
+    pub fn new (tokens: &'source [Spanned<Token>]) -> Self  {
 	Self {
-	    driver,
 	    tokens,
 	    pos: 0,
 	    max: tokens.len(),
@@ -49,7 +46,7 @@ impl<'a> Parser<'a> {
 	true
     }
 
-    fn expect_id (&mut self) -> &'a str {
+    fn expect_id (&mut self) -> &'source str {
 	match self.get () {
 	    Token::Identifier (s) => {
 		self.advance ();
@@ -63,7 +60,7 @@ impl<'a> Parser<'a> {
 	}
     }
     
-    fn get (&self) -> Token<'a> {	
+    fn get (&self) -> Token<'source> {	
 	if self.pos >= self.max {
 	    return self.tokens.last().unwrap().item
 	}	
@@ -81,7 +78,7 @@ impl<'a> Parser<'a> {
 	self.pos += 1;
     }
     
-    pub fn parse (&mut self) -> Vec<SpannedItem<'a>> {	
+    pub fn parse (&mut self) -> Vec<SpannedItem<'source>> {	
 	let mut items = vec![];	
 	loop {
 	    let tok = self.get();
@@ -96,7 +93,7 @@ impl<'a> Parser<'a> {
 	items
     }
 
-    fn parse_item (&mut self) -> SpannedItem<'a> {
+    fn parse_item (&mut self) -> SpannedItem<'source> {
 	let tok = self.get();
 	match tok {
 	    Token::Func => {
@@ -108,7 +105,7 @@ impl<'a> Parser<'a> {
 	}
     }
 
-    fn parse_function (&mut self) -> SpannedItem<'a> {	
+    fn parse_function (&mut self) -> SpannedItem<'source> {	
 	self.expect_err(Token::Func);
 	let start_span = self.get_span ();
 	let name = self.expect_id ();

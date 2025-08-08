@@ -72,7 +72,7 @@ impl<'a> NasmContext<'a> {
     
     fn emit_function (&mut self, label: &LirLabel) {
 	match label.value {
-	    LirLabelValue::Function (ref lfn) => {
+	    LirLabelValue::Function (ref _lfn) => {
 		self.functions += &format!("\n{}:", label.name);
 		self.functions += &format!("\n\tpush rbp");
 		self.functions += &format!("\n\tmov rbp, rsp");

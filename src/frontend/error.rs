@@ -2,6 +2,8 @@
 
 use crate::frontend::token::Span;
 
+pub enum CompileError {}
+
 pub struct SyntaxError {
     pub msg: String,
     pub span: Span,

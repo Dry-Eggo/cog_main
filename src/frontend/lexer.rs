@@ -1,19 +1,18 @@
 
-use crate::frontend::driver::Driver;
 use crate::frontend::token:: {Token, Spanned};
 
 #[derive(Clone, Debug)]
-pub struct Lexer<'a> {
-    driver: &'a Driver,
+pub struct Lexer<'source> {
+    source: &'source String,
     cursor: usize,
     line:   usize,
     col:    usize
 }
 
-impl<'a> Lexer<'a> {
-    pub fn new (driver: &'a Driver) -> Self {
+impl<'source> Lexer<'source> {
+    pub fn new (source: &'source String) -> Self {
 	Self {
-	    driver,
+	    source,
 	    cursor: 0,	    
 	    line: 1,
 	    col: 1,
@@ -22,7 +21,7 @@ impl<'a> Lexer<'a> {
 
 
     fn peek (&mut self, n: usize) -> Option<char> {
-	self.driver.source[self.cursor..].chars().nth(n)
+	self.source[self.cursor..].chars().nth(n)
     }
 
     fn advance(&mut self) -> Option<char> {
@@ -39,7 +38,7 @@ impl<'a> Lexer<'a> {
 	None
     }
 
-    pub fn parse_name (&mut self) -> Spanned<Token<'a>> {
+    pub fn parse_name (&mut self) -> Spanned<Token<'source>> {
 	let sl = self.line;
 	let sc = self.cursor;
 
@@ -50,7 +49,7 @@ impl<'a> Lexer<'a> {
 		break;
 	    }
 	}
-	let slice = &self.driver.source[sc..self.col-1];
+	let slice = &self.source[sc..self.col-1];
 	match slice {
 	    "fn"   => Spanned::wrap(Token::Func, sl, sc, self.col-1),
 	    "let"  => Spanned::wrap(Token::Let,  sl, sc, self.col-1),
@@ -60,7 +59,7 @@ impl<'a> Lexer<'a> {
 	}
     }
     
-    pub fn lex (&mut self) -> Vec<Spanned<Token<'a>>> {
+    pub fn lex (&mut self) -> Vec<Spanned<Token<'source>>> {
 	let mut tokens  = vec![];
 	while let Some (ch) = self.peek(0) {
 
