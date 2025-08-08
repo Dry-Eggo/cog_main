@@ -1,0 +1,2 @@
+
+Some(Spanned { item: CompoundStmt([Some(Spanned { item: MutVarDecl(MutVarDecl { name: "age", name_span: Span { file_id: 0, line: 2, col: 8, cole: 10 }, init: None, ty: Some(Spanned { item: SignedInteger(32), span: Span { file_id: 0, line: 2, col: 13, cole: 15 } }) }), span: Span { file_id: 0, line: 2, col: 4, cole: 1 } })]), span: Span { file_id: 0, line: 2, col: 4, cole: 1 } })
